@@ -1,0 +1,37 @@
+services:
+  tesisdb:
+    image: postgres:18-alpine3.23
+    container_name: tesisDB
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: tesisbackend
+    ports:
+      - "5432:5432"
+    volumes:
+      - tesis_db_data:/var/lib/postgresql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d tesisbackend" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  tesisbackend:
+    build: .
+    container_name: tesisBackend
+#    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://tesisdb:5432/tesisbackend
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=1234
+#    links:
+#      - tesisBackend
+    depends_on:
+      tesisdb:
+        condition: service_healthy
+
+volumes:
+  tesis_db_data:
