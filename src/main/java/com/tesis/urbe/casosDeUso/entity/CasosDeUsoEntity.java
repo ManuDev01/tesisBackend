@@ -1,20 +1,41 @@
 package com.tesis.urbe.casosDeUso.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.tesis.urbe.proyectos.entity.ProyectosEntity;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "casosDeUso")
 public class CasosDeUsoEntity {
-    @Id
-    private Long id;
 
-    public void setId(Long id) {
-        this.id = id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "idCasoDeUso")
+    private Integer idCasoDeUso;
+
+    @OneToOne
+    @JoinColumn(name = "idProyecto", referencedColumnName = "idProyecto")
+    private ProyectosEntity idProyecto;
+
+    CasosDeUsoEntity() {}
+
+    public CasosDeUsoEntity(Integer idCasoDeUso, ProyectosEntity idProyecto) {
+        this.idCasoDeUso = idCasoDeUso;
+        this.idProyecto = idProyecto;
     }
 
-    public Long getId() {
-        return id;
+    public Integer getIdCasoDeUso() {
+        return idCasoDeUso;
+    }
+
+    public void setIdCasoDeUso(Integer idCasoDeUso) {
+        this.idCasoDeUso = idCasoDeUso;
+    }
+
+    public ProyectosEntity getIdProyecto() {
+        return idProyecto;
+    }
+
+    public void setIdProyecto(ProyectosEntity idProyecto) {
+        this.idProyecto = idProyecto;
     }
 }
