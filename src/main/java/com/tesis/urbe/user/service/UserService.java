@@ -25,6 +25,12 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
+    public UserDTO getUserById(Integer idUsuario) {
+        return userRepository.findById(idUsuario)
+                .map(UserDTO::fromEntity)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con el ID: " + idUsuario));
+    }
+
     // POST - Guardar usuario directo
     public UserDTO saveUser(UserDTO userDTO) {
         // Armamos el objeto de Rol si viene el ID

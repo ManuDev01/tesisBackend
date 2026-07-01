@@ -24,6 +24,12 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
+    @GetMapping("/getUserById/{idUsuario}")
+    public ResponseEntity<UserDTO> getUserById(@PathVariable("idUsuario") Integer idUsuario) {
+        UserDTO user = userService.getUserById(idUsuario);
+        return ResponseEntity.ok(user);
+    }
+
     @PostMapping("/saveUser")
     public ResponseEntity<UserDTO> saveUser(@RequestBody UserDTO userDTO) {
         UserDTO savedUser = userService.saveUser(userDTO);
