@@ -1,20 +1,32 @@
 package com.tesis.urbe.user.controller;
 
+import java.util.List;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
+import com.tesis.urbe.user.dto.UserDTO;
 import com.tesis.urbe.user.service.UserService;
 
-@Controller
+@RestController
 @RequestMapping("/user")
 public class UserController {
 
-    private UserService userService;
+    private final UserService userService;
+
+    // Inyección por constructor (evita usar @Autowired aquí, es más limpio)
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
 
     @GetMapping("/getUsers")
-    public ResponseEntity<?> getUsers() {
-        return this.
-    };
+    public ResponseEntity<List<UserDTO>> getUsers() {
+        List<UserDTO> users = userService.getUsers();
+        return ResponseEntity.ok(users);
+    }
+
+    @PostMapping("/saveUser")
+    public ResponseEntity<UserDTO> saveUser(@RequestBody UserDTO userDTO) {
+        UserDTO savedUser = userService.saveUser(userDTO);
+        return ResponseEntity.ok(savedUser);
+    }
 }
