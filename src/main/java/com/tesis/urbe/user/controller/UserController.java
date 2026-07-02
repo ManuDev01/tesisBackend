@@ -2,6 +2,7 @@ package com.tesis.urbe.user.controller;
 
 import java.util.List;
 
+import com.tesis.urbe.user.dto.DeleteUserDTO;
 import com.tesis.urbe.user.dto.UpdateUserDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -42,5 +43,11 @@ public class UserController {
     public ResponseEntity<UpdateUserDTO> updateUser(@RequestBody UpdateUserDTO updateUserDTO) {
         UpdateUserDTO updateUser = userService.updateUser(updateUserDTO);
         return ResponseEntity.ok(updateUser);
+    }
+
+    @DeleteMapping("/deleteUser")
+    public ResponseEntity<DeleteUserDTO> deleteUser(@RequestBody DeleteUserDTO deleteUserDTO) {
+        DeleteUserDTO deleteUser = userService.deleteUser(deleteUserDTO);
+        return ResponseEntity.ok(deleteUser);
     }
 }

@@ -4,8 +4,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.tesis.urbe.rol.entity.RolEntity;
+import com.tesis.urbe.user.dto.DeleteUserDTO;
 import com.tesis.urbe.user.dto.UpdateUserDTO;
 import com.tesis.urbe.user.entity.UserEntity;
+import org.hibernate.sql.Update;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -75,5 +77,15 @@ public class UserService {
         UserEntity usuarioActualizado = userRepository.save(usuario);
 
         return UpdateUserDTO.fromEntity(usuarioActualizado);
+    }
+
+    public DeleteUserDTO deleteUser(DeleteUserDTO deleteUserDTO) {
+        UserEntity usuario = userRepository.findById(deleteUserDTO.idUsuario()).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        usuario.setActivo(false);
+
+        UserEntity usuarioEliminado = userRepository.save(usuario);
+
+        return DeleteUserDTO.fromEntity(usuarioEliminado);
     }
 }
