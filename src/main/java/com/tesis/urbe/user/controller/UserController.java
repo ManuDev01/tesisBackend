@@ -1,6 +1,8 @@
 package com.tesis.urbe.user.controller;
 
 import java.util.List;
+
+import com.tesis.urbe.user.dto.UpdateUserDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,5 +36,11 @@ public class UserController {
     public ResponseEntity<UserDTO> saveUser(@RequestBody UserDTO userDTO) {
         UserDTO savedUser = userService.saveUser(userDTO);
         return ResponseEntity.ok(savedUser);
+    }
+
+    @PutMapping("/updateUser")
+    public ResponseEntity<UpdateUserDTO> updateUser(@RequestBody UpdateUserDTO updateUserDTO) {
+        UpdateUserDTO updateUser = userService.updateUser(updateUserDTO);
+        return ResponseEntity.ok(updateUser);
     }
 }

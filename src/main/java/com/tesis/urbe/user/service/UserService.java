@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.tesis.urbe.rol.entity.RolEntity;
+import com.tesis.urbe.user.dto.UpdateUserDTO;
 import com.tesis.urbe.user.entity.UserEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,7 @@ public class UserService {
                 .map(UserDTO::fromEntity)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con el ID: " + idUsuario));
     }
+    // TODO: Encriptar Contrasena
 
     // POST - Guardar usuario directo
     public UserDTO saveUser(UserDTO userDTO) {
@@ -57,5 +59,21 @@ public class UserService {
 
         UserEntity savedEntity = userRepository.save(userEntity);
         return UserDTO.fromEntity(savedEntity);
+    }
+
+    public UpdateUserDTO updateUser(UpdateUserDTO updateUserDTO) {
+        UserEntity usuario = userRepository.findById(updateUserDTO.idUsuario()).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        usuario.setPrimerNombre(updateUserDTO.primerNombre());
+        usuario.setSegundoNombre(updateUserDTO.segundoNombre());
+        usuario.setPrimerApellido(updateUserDTO.primerApellido());
+        usuario.setSegundoApellido(updateUserDTO.segundoApellido());
+        usuario.setNombreUsuario(updateUserDTO.nombreUsuario());
+        usuario.setCedula(updateUserDTO.cedula());
+        usuario.setCorreo(updateUserDTO.correo());
+
+        UserEntity usuarioActualizado = userRepository.save(usuario);
+
+        return UpdateUserDTO.fromEntity(usuarioActualizado);
     }
 }
