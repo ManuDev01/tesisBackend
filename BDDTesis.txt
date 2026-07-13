@@ -1,0 +1,8 @@
+Hostname: dpg-d8tgnvbaml3c73bdbo5g-a
+port: 5432
+Database: tesisdb_ljoh
+username: tesisurbedb
+password: c9tsHPWoiBsW1aMxrZASlG3MdnzLqhi3
+internal database url: postgresql://tesisurbedb:c9tsHPWoiBsW1aMxrZASlG3MdnzLqhi3@dpg-d8tgnvbaml3c73bdbo5g-a/tesisdb_ljoh
+external database url: postgresql://tesisurbedb:c9tsHPWoiBsW1aMxrZASlG3MdnzLqhi3@dpg-d8tgnvbaml3c73bdbo5g-a.ohio-postgres.render.com/tesisdb_ljoh
+psql command: PGPASSWORD=c9tsHPWoiBsW1aMxrZASlG3MdnzLqhi3 psql -h dpg-d8tgnvbaml3c73bdbo5g-a.ohio-postgres.render.com -U tesisurbedb tesisdb_ljoh

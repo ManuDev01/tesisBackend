@@ -1,0 +1,9 @@
+[
+  {
+    "label": "Spring Boot: Run Application",
+    "command": ".\\gradlew.bat",
+    "args": ["bootRun"],
+    "use_new_terminal": false,
+    "reveal": "always"
+  }
+]
