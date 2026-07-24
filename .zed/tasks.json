@@ -5,5 +5,19 @@
     "args": ["bootRun"],
     "use_new_terminal": false,
     "reveal": "always"
+  },
+  {
+    "label": "Gradle: Clean Build (Sync)",
+    "command": ".\\gradlew.bat",
+    "args": ["clean", "build", "-x", "test"],
+    "use_new_terminal": false,
+    "reveal": "always"
+  },
+  {
+    "label": "Gradle: Refresh Dependencies (Force Sync)",
+    "command": ".\\gradlew.bat",
+    "args": ["--refresh-dependencies"],
+    "use_new_terminal": false,
+    "reveal": "always"
   }
 ]
