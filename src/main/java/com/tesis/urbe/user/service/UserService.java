@@ -20,6 +20,10 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
+    public long countUsers() {
+        return userRepository.count();
+    }
+
     // GET - Obtener todos los usuarios
     public List<UserDTO> getUsers() {
         return userRepository.findAll()

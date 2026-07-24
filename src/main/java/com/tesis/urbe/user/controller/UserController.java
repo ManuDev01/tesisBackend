@@ -21,6 +21,12 @@ public class UserController {
         this.userService = userService;
     }
 
+    @GetMapping("/db-check")
+    public ResponseEntity<String> checkDbConnection() {
+        long count = userService.countUsers(); // Hace un COUNT(*) simple a la BD
+        return ResponseEntity.ok("Conexión exitosa a Supabase. Usuarios totales en BD: " + count);
+    }
+
     @GetMapping("/getUsers")
     public ResponseEntity<List<UserDTO>> getUsers() {
         List<UserDTO> users = userService.getUsers();
