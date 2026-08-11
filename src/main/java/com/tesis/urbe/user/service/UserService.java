@@ -9,6 +9,7 @@ import com.tesis.urbe.user.dto.UpdateUserDTO;
 import com.tesis.urbe.user.entity.UserEntity;
 import org.hibernate.sql.Update;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.tesis.urbe.user.dto.UserDTO;
@@ -17,8 +18,14 @@ import com.tesis.urbe.user.repository.UserRepository;
 @Service
 public class UserService {
 
-    @Autowired
-    private UserRepository userRepository;
+//    @Autowired
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     public long countUsers() {
         return userRepository.count();
@@ -37,10 +44,12 @@ public class UserService {
                 .map(UserDTO::fromEntity)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con el ID: " + idUsuario));
     }
-    // TODO: Encriptar Contrasena
 
     // POST - Guardar usuario directo
     public UserDTO saveUser(UserDTO userDTO) {
+
+        String passwordEncriptada = this.passwordEncoder.encode(userDTO.contrasena());
+
         // Armamos el objeto de Rol si viene el ID
         RolEntity rol = null;
         if (userDTO.idRol() != null) {
@@ -58,7 +67,7 @@ public class UserService {
                 userDTO.nombreUsuario(),
                 userDTO.cedula(),
                 userDTO.correo(),
-                userDTO.contrasena(), // Aquí pasa la contraseña limpia del frontend
+                passwordEncriptada, // Aquí pasa la contraseña limpia del frontend
                 rol,
                 userDTO.activo()
         );
