@@ -1,11 +1,12 @@
 package com.tesis.urbe.user.repository;
 
-import com.tesis.urbe.user.entity.UserEntity;
-import org.springframework.data.repository.ListCrudRepository;
-
 import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
+import com.tesis.urbe.user.entity.UserEntity;
 
-public interface UserRepository extends ListCrudRepository<UserEntity, Integer> {
+public interface UserRepository extends JpaRepository<UserEntity, Integer> {
 
-    Optional<UserEntity> findByNombreUsuario(String nombreUsuario);
+    // Busca coincidencia por nombreUsuario O por correo
+    Optional<UserEntity> findByNombreUsuarioOrCorreo(String nombreUsuario, String correo);
+
 }
