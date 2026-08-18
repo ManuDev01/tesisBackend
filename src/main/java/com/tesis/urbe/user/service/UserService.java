@@ -18,7 +18,6 @@ import com.tesis.urbe.user.repository.UserRepository;
 @Service
 public class UserService {
 
-//    @Autowired
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
