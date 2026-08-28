@@ -28,20 +28,31 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-websocket-test'
 
-	// JUnit 5 API y Motor
-	implementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
-	implementation 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
 
 	// Launcher de Consola de JUnit Platform (Crucial para ejecutar 'ConsoleLauncher' desde el subproceso)
 	implementation 'org.junit.platform:junit-platform-console-standalone:1.10.2'
 
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+//	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
 	// Manejo de Login
 	implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
+
+	// JUnit 5 visible en tiempo de ejecución para el compilador en memoria
+	implementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
+	implementation 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
+	implementation 'org.junit.platform:junit-platform-launcher:1.10.2'
 }
+
+// Extraer librerías al directorio build/libs/lib
+task copyDependencies(type: Copy) {
+	from configurations.runtimeClasspath
+	into "$buildDir/libs/lib"
+}
+
+bootJar.dependsOn copyDependencies
+
 
 tasks.named('test') {
 	useJUnitPlatform()
