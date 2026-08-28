@@ -15,8 +15,11 @@ import org.springframework.stereotype.Service;
 
 import javax.tools.*;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -30,6 +33,22 @@ public class CompilerService {
 
     public CompilerService(CasosDeUsoRepository casosDeUsoRepository) {
         this.casosDeUsoRepository = casosDeUsoRepository;
+    }
+
+    /**
+     * Extrae las rutas del classpath resolviendo el ClassLoader activo de Spring Boot (incluso en Uber-JAR)
+     */
+    private String obtenerClasspathCompleto() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(System.getProperty("java.class.path"));
+
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        if (cl instanceof URLClassLoader urlClassLoader) {
+            for (URL url : urlClassLoader.getURLs()) {
+                sb.append(File.pathSeparator).append(url.getFile());
+            }
+        }
+        return sb.toString();
     }
 
     public ExecutionResultDTO evaluarCodigoConJUnit(EvaluationRequestDTO request) {
@@ -72,8 +91,10 @@ public class CompilerService {
         JavaFileObject testSourceFile = new JavaSourceFromString(testClassName, testCode);
         List<JavaFileObject> compilationUnits = List.of(userSourceFile, testSourceFile);
 
-        // 4. Compilar ambas clases
-        JavaCompiler.CompilationTask task = compiler.getTask(null, fileManager, diagnostics, null, null, compilationUnits);
+        // 4. Compilar ambas clases con el classpath de la aplicación
+        List<String> options = List.of("-classpath", obtenerClasspathCompleto());
+
+        JavaCompiler.CompilationTask task = compiler.getTask(null, fileManager, diagnostics, options, null, compilationUnits);
         boolean compiled = task.call();
 
         if (!compiled) {
