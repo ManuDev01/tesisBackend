@@ -10,7 +10,7 @@ RUN chmod +x gradlew
 RUN ./gradlew bootJar --no-daemon || ./gradlew build -x test --no-daemon
 
 # --- ETAPA 2: Entorno de Ejecución Ligero ---
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:21-jdk-alpine
 
 WORKDIR /home/app
 
