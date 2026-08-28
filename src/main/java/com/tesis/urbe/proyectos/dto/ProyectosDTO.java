@@ -12,19 +12,23 @@ public record ProyectosDTO(
         String estado,
         Integer puntosProyectos,
         Integer idCasoDeUso,
-        LocalDate createAt
-        ) {
+        LocalDate createAt,
+        String decripcion
+) {
     public static ProyectosDTO fromEntity(ProyectosEntity entity) {
+        if (entity == null) return null;
+
         return new ProyectosDTO(
                 entity.getIdProyecto(),
-                entity.getIdSeccion() != null ? entity.getIdSeccion().getIdSeccion() : null, // Si idSeccion es una relación JPA
+                entity.getIdSeccion() != null ? entity.getIdSeccion().getIdSeccion() : null,
                 entity.getTitulo(),
                 entity.getDescripcion(),
                 entity.getCodigo(),
                 entity.getEstado(),
                 entity.getPuntosProyectos(),
-                entity.getIdCasoDeUso() != null ? entity.getIdCasoDeUso().getIdCasoDeUso() : null, // Si idCasoDeUso es una relación JPA
-                entity.getCreateAt().toLocalDate()
+                entity.getIdCasoDeUso() != null ? entity.getIdCasoDeUso().getIdCasoDeUso() : null,
+                entity.getCreateAt() != null ? entity.getCreateAt().toLocalDate() : null,
+                entity.getDecripcion()
         );
     }
 }

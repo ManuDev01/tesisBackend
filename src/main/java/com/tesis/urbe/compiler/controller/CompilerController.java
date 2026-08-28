@@ -1,6 +1,6 @@
 package com.tesis.urbe.compiler.controller;
 
-import com.tesis.urbe.compiler.dto.ExecutionRequestDTO;
+import com.tesis.urbe.compiler.dto.EvaluationRequestDTO;
 import com.tesis.urbe.compiler.dto.ExecutionResultDTO;
 import com.tesis.urbe.compiler.service.CompilerService;
 import org.springframework.http.ResponseEntity;
@@ -16,10 +16,9 @@ public class CompilerController {
         this.compilerService = compilerService;
     }
 
-    @PostMapping("/ejecutar")
-    public ResponseEntity<ExecutionResultDTO> ejecutar(@RequestBody ExecutionRequestDTO request) {
-        // Asumimos que la clase principal enviada se llama 'Main'
-        ExecutionResultDTO resultado = compilerService.ejecutarCodigo(request, "Main");
+    @PostMapping("/evaluar")
+    public ResponseEntity<ExecutionResultDTO> evaluarConCasoDeUso(@RequestBody EvaluationRequestDTO request) {
+        ExecutionResultDTO resultado = compilerService.evaluarCodigoConJUnit(request);
         return ResponseEntity.ok(resultado);
     }
 }

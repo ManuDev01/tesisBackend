@@ -27,6 +27,14 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-websocket-test'
+
+	// JUnit 5 API y Motor
+	implementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
+	implementation 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
+
+	// Launcher de Consola de JUnit Platform (Crucial para ejecutar 'ConsoleLauncher' desde el subproceso)
+	implementation 'org.junit.platform:junit-platform-console-standalone:1.10.2'
+
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
 	// Manejo de Login

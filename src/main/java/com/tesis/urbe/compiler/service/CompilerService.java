@@ -1,31 +1,64 @@
 package com.tesis.urbe.compiler.service;
 
-import com.tesis.urbe.compiler.dto.ExecutionRequestDTO;
+//import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tesis.urbe.casosDeUso.entity.CasosDeUsoEntity;
+import com.tesis.urbe.casosDeUso.repository.CasosDeUsoRepository;
+import com.tesis.urbe.compiler.dto.EvaluationRequestDTO;
 import com.tesis.urbe.compiler.dto.ExecutionResultDTO;
-import com.tesis.urbe.compiler.service.MemoryClassLoader;
+import org.junit.platform.launcher.Launcher;
+import org.junit.platform.launcher.LauncherDiscoveryRequest;
+import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder;
+import org.junit.platform.launcher.core.LauncherFactory;
+import org.junit.platform.launcher.listeners.SummaryGeneratingListener;
+import org.junit.platform.launcher.listeners.TestExecutionSummary;
 import org.springframework.stereotype.Service;
 
 import javax.tools.*;
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.lang.reflect.Method;
-import java.util.Collections;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
 
 @Service
 public class CompilerService {
 
+    private final CasosDeUsoRepository casosDeUsoRepository;
 
-    public ExecutionResultDTO ejecutarCodigo(ExecutionRequestDTO request, String className) {
+    public CompilerService(CasosDeUsoRepository casosDeUsoRepository) {
+        this.casosDeUsoRepository = casosDeUsoRepository;
+    }
+
+    public ExecutionResultDTO evaluarCodigoConJUnit(EvaluationRequestDTO request) {
+        long startTime = System.currentTimeMillis();
+
+        List<CasosDeUsoEntity> casosDeUsoList = casosDeUsoRepository.findByIdProyecto_IdProyecto(request.idProyecto());
+
+        if (casosDeUsoList.isEmpty()) {
+            return new ExecutionResultDTO(false, "", "No se encontraron casos de uso para este proyecto.", 0);
+        }
+
+        // 1. Detectar dinámicamente la clase enviada por el usuario
+        String userClassName = extraerNombreClasePublica(request.codigo());
+        if (userClassName == null) {
+            return new ExecutionResultDTO(false, "", "Error: No se encontró una clase pública válida.", 0);
+        }
+
+        // 2. Generar el código fuente de la suite JUnit en tiempo de ejecución
+        String testClassName = "ProyectoTest";
+        String testCode = generarCodigoTestJUnit(testClassName, userClassName, casosDeUsoList);
+
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         if (compiler == null) {
-            return new ExecutionResultDTO(false, "", "El JDK no está disponible en este entorno.", 0);
+            return new ExecutionResultDTO(false, "", "El JDK no está disponible en el entorno de ejecución.", 0);
         }
 
         DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
         MemoryClassLoader classLoader = new MemoryClassLoader();
 
-        // Configurar el Administrador de Archivos en memoria
         StandardJavaFileManager standardFileManager = compiler.getStandardFileManager(diagnostics, null, null);
         JavaFileManager fileManager = new ForwardingJavaFileManager<>(standardFileManager) {
             @Override
@@ -34,55 +67,122 @@ public class CompilerService {
             }
         };
 
-        // 1. Compilar el código
-        JavaFileObject file = new JavaSourceFromString(className, request.codigo());
-        Iterable<? extends JavaFileObject> compilationUnits = Collections.singletonList(file);
-        JavaCompiler.CompilationTask task = compiler.getTask(null, fileManager, diagnostics, null, null, compilationUnits);
+        // 3. Crear unidades de compilación en memoria
+        JavaFileObject userSourceFile = new JavaSourceFromString(userClassName, request.codigo());
+        JavaFileObject testSourceFile = new JavaSourceFromString(testClassName, testCode);
+        List<JavaFileObject> compilationUnits = List.of(userSourceFile, testSourceFile);
 
+        // 4. Compilar ambas clases
+        JavaCompiler.CompilationTask task = compiler.getTask(null, fileManager, diagnostics, null, null, compilationUnits);
         boolean compiled = task.call();
 
         if (!compiled) {
-            StringBuilder errorLog = new StringBuilder();
+            StringBuilder errorLog = new StringBuilder("Error de compilación:\n");
             for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics()) {
                 errorLog.append(String.format("Línea %d: %s\n", diagnostic.getLineNumber(), diagnostic.getMessage(null)));
             }
-            return new ExecutionResultDTO(false, "", errorLog.toString(), 0);
+            return new ExecutionResultDTO(false, "", errorLog.toString(), System.currentTimeMillis() - startTime);
         }
 
-        // 2. Ejecutar el código compilado e interceptar la salida
-        long startTime = System.currentTimeMillis();
+        // 5. Ejecutar la suite mediante JUnit Launcher
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        ByteArrayOutputStream errorStream = new ByteArrayOutputStream();
         PrintStream origOut = System.out;
         PrintStream origErr = System.err;
-        InputStream origIn = System.in;
 
         try {
             System.setOut(new PrintStream(outputStream));
-            System.setErr(new PrintStream(errorStream));
+            System.setErr(new PrintStream(outputStream));
 
-            if (request.entrada() != null && !request.entrada().isEmpty()) {
-                System.setIn(new ByteArrayInputStream(request.entrada().getBytes()));
+            Class<?> testClass = classLoader.loadClass(testClassName);
+
+            LauncherDiscoveryRequest discoveryRequest = LauncherDiscoveryRequestBuilder.request()
+                    .selectors(selectClass(testClass))
+                    .build();
+
+            Launcher launcher = LauncherFactory.create();
+            SummaryGeneratingListener listener = new SummaryGeneratingListener();
+            launcher.registerTestExecutionListeners(listener);
+
+            ClassLoader originalContextClassLoader = Thread.currentThread().getContextClassLoader();
+            try {
+                Thread.currentThread().setContextClassLoader(classLoader);
+                launcher.execute(discoveryRequest);
+            } finally {
+                Thread.currentThread().setContextClassLoader(originalContextClassLoader);
             }
 
-            Class<?> loadedClass = classLoader.loadClass(className);
-            Method mainMethod = loadedClass.getMethod("main", String[].class);
-
-            // Invocar el método main(String[] args)
-            mainMethod.invoke(null, (Object) new String[]{});
-
+            TestExecutionSummary summary = listener.getSummary();
             long duration = System.currentTimeMillis() - startTime;
-            return new ExecutionResultDTO(true, outputStream.toString(), errorStream.toString(), duration);
+            boolean exito = summary.getTestsFailedCount() == 0 && summary.getTestsSucceededCount() > 0;
+
+            StringBuilder feedback = new StringBuilder();
+            feedback.append(String.format("Pruebas exitosas: %d/%d\n", summary.getTestsSucceededCount(), summary.getTestsFoundCount()));
+
+            if (!exito) {
+                summary.getFailures().forEach(failure -> {
+                    String testName = failure.getTestIdentifier().getDisplayName();
+                    String mensajeError = failure.getException() != null ? failure.getException().getMessage() : "Error desconocido";
+                    feedback.append(String.format("Fallo en [%s]: %s\n", testName, mensajeError));
+                });
+            }
+
+            return new ExecutionResultDTO(exito, outputStream.toString(), feedback.toString(), duration);
 
         } catch (Exception e) {
             long duration = System.currentTimeMillis() - startTime;
-            Throwable cause = e.getCause() != null ? e.getCause() : e;
-            return new ExecutionResultDTO(false, outputStream.toString(), cause.toString(), duration);
+            return new ExecutionResultDTO(false, outputStream.toString(), "Error en ejecución: " + e.getMessage(), duration);
         } finally {
-            // Restaurar las salidas por defecto de la consola
             System.setOut(origOut);
             System.setErr(origErr);
-            System.setIn(origIn);
         }
+    }
+
+    private String extraerNombreClasePublica(String codigoSource) {
+        if (codigoSource == null || codigoSource.isBlank()) return null;
+        Pattern pattern = Pattern.compile("public\\s+class\\s+([A-Za-z0-9_$]+)");
+        Matcher matcher = pattern.matcher(codigoSource);
+        return matcher.find() ? matcher.group(1) : null;
+    }
+
+    private String generarCodigoTestJUnit(String testClassName, String userClassName, List<CasosDeUsoEntity> casos) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("import org.junit.jupiter.api.Test;\n");
+        sb.append("import static org.junit.jupiter.api.Assertions.*;\n");
+        sb.append("import java.util.List;\n");
+        sb.append("import java.util.Arrays;\n\n");
+        sb.append("public class ").append(testClassName).append(" {\n\n");
+
+        for (int i = 0; i < casos.size(); i++) {
+            CasosDeUsoEntity caso = casos.get(i);
+            String entrada = caso.getEntrada().trim();
+
+            // Formatear ["1", "2", "Fizz"] -> Arrays.asList("1", "2", "Fizz")
+            String salidaEsperadaRaw = caso.getSalidaEsperada().trim();
+            String elementos = salidaEsperadaRaw.length() > 2
+                    ? salidaEsperadaRaw.substring(1, salidaEsperadaRaw.length() - 1)
+                    : "";
+
+            sb.append(String.format("""
+            @Test
+            public void testCaso_%d() {
+                %s instancia = new %s();
+                List<String> obtenido = instancia.generarFizzBuzz(%s);
+                List<String> esperado = %s;
+                
+                assertNotNull(obtenido, "El método no debe retornar null");
+                assertEquals(esperado, obtenido, "Evaluación fallida para entrada: %s");
+            }
+            """,
+                    i + 1,
+                    userClassName,
+                    userClassName,
+                    entrada,
+                    elementos.isEmpty() ? "List.of()" : "Arrays.asList(" + elementos + ")",
+                    entrada
+            ));
+        }
+
+        sb.append("}\n");
+        return sb.toString();
     }
 }

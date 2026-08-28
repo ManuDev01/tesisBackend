@@ -3,7 +3,6 @@ package com.tesis.urbe.proyectos.entity;
 import com.tesis.urbe.casosDeUso.entity.CasosDeUsoEntity;
 import com.tesis.urbe.seccion.entity.SeccionEntity;
 import jakarta.persistence.*;
-
 import java.sql.Date;
 
 @Entity
@@ -12,17 +11,17 @@ public class ProyectosEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "idProyecto")
+    @Column(name = "idproyecto")
     private Integer idProyecto;
 
     @OneToOne
-    @JoinColumn(name = "idSeccion", referencedColumnName = "idSeccion")
+    @JoinColumn(name = "idseccion", referencedColumnName = "idseccion")
     private SeccionEntity idSeccion;
 
-    @Column(name = "titulo")
+    @Column(name = "titulo", nullable = false)
     private String titulo;
 
-    @Column(name = "decripcion")
+    @Column(name = "descripcion")
     private String descripcion;
 
     @Column(name = "codigo")
@@ -31,21 +30,22 @@ public class ProyectosEntity {
     @Column(name = "estado")
     private String estado;
 
-    @Column(name = "puntosProyectos")
+    @Column(name = "puntosproyectos")
     private Integer puntosProyectos;
 
     @OneToOne
-    @JoinColumn(name = "idCasoDeUso", referencedColumnName = "idCasoDeUso")
+    @JoinColumn(name = "idcasodeuso", referencedColumnName = "idcasodeuso")
     private CasosDeUsoEntity idCasoDeUso;
 
     @Column(name = "createdat")
     private Date createAt;
 
-    ProyectosEntity() {
+    @Column(name = "decripcion")
+    private String decripcion;
 
-    }
+    public ProyectosEntity() {}
 
-    public ProyectosEntity(Integer idProyecto, SeccionEntity idSeccion, String titulo, String descripcion, String codigo, String estado, Integer puntosProyectos, CasosDeUsoEntity idCasoDeUso, Date createAt) {
+    public ProyectosEntity(Integer idProyecto, SeccionEntity idSeccion, String titulo, String descripcion, String codigo, String estado, Integer puntosProyectos, CasosDeUsoEntity idCasoDeUso, Date createAt, String decripcion) {
         this.idProyecto = idProyecto;
         this.idSeccion = idSeccion;
         this.titulo = titulo;
@@ -55,6 +55,7 @@ public class ProyectosEntity {
         this.puntosProyectos = puntosProyectos;
         this.idCasoDeUso = idCasoDeUso;
         this.createAt = createAt;
+        this.decripcion = decripcion;
     }
 
     public Integer getIdProyecto() {
@@ -127,5 +128,13 @@ public class ProyectosEntity {
 
     public void setCreateAt(Date createAt) {
         this.createAt = createAt;
+    }
+
+    public String getDecripcion() {
+        return decripcion;
+    }
+
+    public void setDecripcion(String decripcion) {
+        this.decripcion = decripcion;
     }
 }
