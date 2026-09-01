@@ -1,6 +1,5 @@
 package com.tesis.urbe.compiler.service;
 
-//import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tesis.urbe.casosDeUso.entity.CasosDeUsoEntity;
 import com.tesis.urbe.casosDeUso.repository.CasosDeUsoRepository;
 import com.tesis.urbe.compiler.dto.EvaluationRequestDTO;
@@ -20,6 +19,7 @@ import java.io.PrintStream;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -35,30 +35,46 @@ public class CompilerService {
         this.casosDeUsoRepository = casosDeUsoRepository;
     }
 
-    /**
-     * Extrae las rutas del classpath resolviendo el ClassLoader activo de Spring Boot (incluso en Uber-JAR)
-     */
-    private String obtenerClasspathCompleto() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(System.getProperty("java.class.path"));
+    private Object[] parsearEntradas(Class<?>[] paramTypes, String entradaRaw) {
+        if (paramTypes.length == 0) return new Object[0];
 
-        ClassLoader cl = Thread.currentThread().getContextClassLoader();
-        if (cl instanceof URLClassLoader urlClassLoader) {
-            for (URL url : urlClassLoader.getURLs()) {
-                sb.append(File.pathSeparator).append(url.getFile());
+        // Caso 1: Método con firma (int[], int) -> p.ej. Two Sum
+        if (paramTypes.length == 2 && paramTypes[0] == int[].class && paramTypes[1] == int.class) {
+            // 1. Extraer el contenido dentro de los corchetes [...]
+            java.util.regex.Matcher matcherArr = java.util.regex.Pattern.compile("\\[(.*?)\\]").matcher(entradaRaw);
+            int[] nums = new int[0];
+            if (matcherArr.find()) {
+                String arrStr = matcherArr.group(1).trim();
+                if (!arrStr.isEmpty()) {
+                    nums = Arrays.stream(arrStr.split(","))
+                            .map(String::trim)
+                            .mapToInt(Integer::parseInt)
+                            .toArray();
+                }
             }
+
+            // 2. Extraer el último entero de la cadena (que corresponde al target)
+            java.util.regex.Matcher matcherTarget = java.util.regex.Pattern.compile("-?\\d+$").matcher(entradaRaw.trim());
+            int target = 0;
+            if (matcherTarget.find()) {
+                target = Integer.parseInt(matcherTarget.group());
+            }
+
+            return new Object[]{nums, target};
         }
-        return sb.toString();
+
+        // Caso 2: Método con firma (int) -> p.ej. FizzBuzz
+        if (paramTypes.length == 1 && paramTypes[0] == int.class) {
+            java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("-?\\d+").matcher(entradaRaw);
+            int val = matcher.find() ? Integer.parseInt(matcher.group()) : 0;
+            return new Object[]{val};
+        }
+
+        return new Object[]{entradaRaw};
     }
 
     public ExecutionResultDTO evaluarCodigoConJUnit(EvaluationRequestDTO request) {
         long startTime = System.currentTimeMillis();
-
-        List<CasosDeUsoEntity> casosDeUsoList = casosDeUsoRepository.findByIdProyecto_IdProyecto(request.idProyecto());
-
-        if (casosDeUsoList.isEmpty()) {
-            return new ExecutionResultDTO(false, "", "No se encontraron casos de uso para este proyecto.", 0);
-        }
 
         // 1. Detectar dinámicamente la clase enviada por el usuario
         String userClassName = extraerNombreClasePublica(request.codigo());
@@ -66,10 +82,7 @@ public class CompilerService {
             return new ExecutionResultDTO(false, "", "Error: No se encontró una clase pública válida.", 0);
         }
 
-        // 2. Generar el código fuente de la suite JUnit en tiempo de ejecución
-        String testClassName = "ProyectoTest";
-        String testCode = generarCodigoTestJUnit(testClassName, userClassName, casosDeUsoList);
-
+        // 2. Inicializar entorno del compilador en memoria
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         if (compiler == null) {
             return new ExecutionResultDTO(false, "", "El JDK no está disponible en el entorno de ejecución.", 0);
@@ -86,14 +99,23 @@ public class CompilerService {
             }
         };
 
-        // 3. Crear unidades de compilación en memoria
+        // 3. Obtener casos de uso de la base de datos
+        List<CasosDeUsoEntity> casosDeUsoList = casosDeUsoRepository.findByIdProyecto_IdProyecto(request.idProyecto());
+
+        // 4. Si no hay casos de uso registrados, ejecutar directamente el método main()
+        if (casosDeUsoList.isEmpty()) {
+            return ejecutarMainLibre(userClassName, request.codigo(), classLoader, fileManager, compiler, diagnostics, startTime);
+        }
+
+        // 5. Generar y compilar la suite de pruebas JUnit si existen casos de uso
+        String testClassName = "ProyectoTest";
+        String testCode = generarCodigoTestJUnit(testClassName, userClassName, casosDeUsoList);
+
         JavaFileObject userSourceFile = new JavaSourceFromString(userClassName, request.codigo());
         JavaFileObject testSourceFile = new JavaSourceFromString(testClassName, testCode);
         List<JavaFileObject> compilationUnits = List.of(userSourceFile, testSourceFile);
 
-        // 4. Compilar ambas clases con el classpath de la aplicación
         List<String> options = List.of("-classpath", obtenerClasspathCompleto());
-
         JavaCompiler.CompilationTask task = compiler.getTask(null, fileManager, diagnostics, options, null, compilationUnits);
         boolean compiled = task.call();
 
@@ -105,17 +127,28 @@ public class CompilerService {
             return new ExecutionResultDTO(false, "", errorLog.toString(), System.currentTimeMillis() - startTime);
         }
 
-        // 5. Ejecutar la suite mediante JUnit Launcher
+        // 6. Ejecutar la suite mediante JUnit Launcher
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         PrintStream origOut = System.out;
         PrintStream origErr = System.err;
 
+        // Dentro del bloque try {} en evaluarCodigoConJUnit...
         try {
             System.setOut(new PrintStream(outputStream));
             System.setErr(new PrintStream(outputStream));
 
-            Class<?> testClass = classLoader.loadClass(testClassName);
+            Class<?> userClass = classLoader.loadClass(userClassName);
 
+            // 1. Opcional: Ejecutar main() si el usuario lo incluyó para capturar sus System.out.println
+            try {
+                Method mainMethod = userClass.getMethod("main", String[].class);
+                mainMethod.invoke(null, (Object) new String[]{});
+            } catch (NoSuchMethodException ignored) {
+                // La clase no tiene main, continúa normalmente con los tests JUnit
+            }
+
+            // 2. Ejecutar la suite de pruebas JUnit
+            Class<?> testClass = classLoader.loadClass(testClassName);
             LauncherDiscoveryRequest discoveryRequest = LauncherDiscoveryRequestBuilder.request()
                     .selectors(selectClass(testClass))
                     .build();
@@ -158,6 +191,70 @@ public class CompilerService {
         }
     }
 
+    private ExecutionResultDTO ejecutarMainLibre(
+            String userClassName,
+            String codigo,
+            MemoryClassLoader classLoader,
+            JavaFileManager fileManager,
+            JavaCompiler compiler,
+            DiagnosticCollector<JavaFileObject> diagnostics,
+            long startTime) {
+
+        JavaFileObject userSourceFile = new JavaSourceFromString(userClassName, codigo);
+        List<String> options = List.of("-classpath", obtenerClasspathCompleto());
+
+        JavaCompiler.CompilationTask task = compiler.getTask(null, fileManager, diagnostics, options, null, List.of(userSourceFile));
+        boolean compiled = task.call();
+
+        if (!compiled) {
+            StringBuilder errorLog = new StringBuilder("Error de compilación:\n");
+            for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics()) {
+                errorLog.append(String.format("Línea %d: %s\n", diagnostic.getLineNumber(), diagnostic.getMessage(null)));
+            }
+            return new ExecutionResultDTO(false, "", errorLog.toString(), System.currentTimeMillis() - startTime);
+        }
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        PrintStream origOut = System.out;
+        PrintStream origErr = System.err;
+
+        try {
+            System.setOut(new PrintStream(outputStream));
+            System.setErr(new PrintStream(outputStream));
+
+            Class<?> loadedClass = classLoader.loadClass(userClassName);
+            Method mainMethod = loadedClass.getMethod("main", String[].class);
+
+            // Invocar main(new String[]{}) por reflexión
+            mainMethod.invoke(null, (Object) new String[]{});
+
+            long duration = System.currentTimeMillis() - startTime;
+            return new ExecutionResultDTO(true, outputStream.toString(), "Ejecución finalizada con éxito.", duration);
+
+        } catch (NoSuchMethodException e) {
+            return new ExecutionResultDTO(false, "", "Error: La clase no contiene un método public static void main(String[] args).", System.currentTimeMillis() - startTime);
+        } catch (Exception e) {
+            Throwable cause = e.getCause() != null ? e.getCause() : e;
+            return new ExecutionResultDTO(false, outputStream.toString(), "Error en tiempo de ejecución: " + cause.getMessage(), System.currentTimeMillis() - startTime);
+        } finally {
+            System.setOut(origOut);
+            System.setErr(origErr);
+        }
+    }
+
+    private String obtenerClasspathCompleto() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(System.getProperty("java.class.path"));
+
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        if (cl instanceof URLClassLoader urlClassLoader) {
+            for (URL url : urlClassLoader.getURLs()) {
+                sb.append(File.pathSeparator).append(url.getFile());
+            }
+        }
+        return sb.toString();
+    }
+
     private String extraerNombreClasePublica(String codigoSource) {
         if (codigoSource == null || codigoSource.isBlank()) return null;
         Pattern pattern = Pattern.compile("public\\s+class\\s+([A-Za-z0-9_$]+)");
@@ -169,39 +266,117 @@ public class CompilerService {
         StringBuilder sb = new StringBuilder();
         sb.append("import org.junit.jupiter.api.Test;\n");
         sb.append("import static org.junit.jupiter.api.Assertions.*;\n");
-        sb.append("import java.util.List;\n");
-        sb.append("import java.util.Arrays;\n\n");
+        sb.append("import java.util.*;\n");
+        sb.append("import java.util.regex.*;\n");
+        sb.append("import java.lang.reflect.Method;\n\n");
         sb.append("public class ").append(testClassName).append(" {\n\n");
 
         for (int i = 0; i < casos.size(); i++) {
             CasosDeUsoEntity caso = casos.get(i);
             String entrada = caso.getEntrada().trim();
-
-            // Formatear ["1", "2", "Fizz"] -> Arrays.asList("1", "2", "Fizz")
-            String salidaEsperadaRaw = caso.getSalidaEsperada().trim();
-            String elementos = salidaEsperadaRaw.length() > 2
-                    ? salidaEsperadaRaw.substring(1, salidaEsperadaRaw.length() - 1)
-                    : "";
+            String salidaEsperada = caso.getSalidaEsperada().trim();
 
             sb.append(String.format("""
-            @Test
-            public void testCaso_%d() {
-                %s instancia = new %s();
-                List<String> obtenido = instancia.generarFizzBuzz(%s);
-                List<String> esperado = %s;
-                
-                assertNotNull(obtenido, "El método no debe retornar null");
-                assertEquals(esperado, obtenido, "Evaluación fallida para entrada: %s");
+        @Test
+        public void testCaso_%d() throws Exception {
+            %s instancia = new %s();
+            
+            Method targetMethod = Arrays.stream(%s.class.getDeclaredMethods())
+                    .filter(m -> !m.getName().equals("main"))
+                    .findFirst()
+                    .orElse(null);
+
+            assertNotNull(targetMethod, "La clase no contiene un método válido para evaluar.");
+
+            Object resultado = null;
+            try {
+                Object[] args = parsearEntradas(targetMethod.getParameterTypes(), "%s");
+                resultado = targetMethod.invoke(instancia, args);
+            } catch (Exception e) {
+                fail("Error al ejecutar el método: " + (e.getCause() != null ? e.getCause().getMessage() : e.getMessage()));
             }
-            """,
+
+            System.out.println("Caso %d [Entrada: %s] -> Salida: " + formatearSalida(resultado));
+            assertResultado("%s", resultado);
+        }
+        """,
                     i + 1,
+                    userClassName, userClassName,
                     userClassName,
-                    userClassName,
-                    entrada,
-                    elementos.isEmpty() ? "List.of()" : "Arrays.asList(" + elementos + ")",
-                    entrada
+                    entrada.replace("\"", "\\\""),
+                    i + 1, entrada.replace("\"", "\\\""),
+                    salidaEsperada.replace("\"", "\\\"")
             ));
         }
+
+        // Expresiones regulares con doble escape (\\\\) para evitar 'illegal escape character'
+        sb.append("""
+        private Object[] parsearEntradas(Class<?>[] paramTypes, String entradaRaw) {
+            if (paramTypes.length == 0) return new Object[0];
+
+            // 1. Método con firma (int[], int) -> Two Sum
+            if (paramTypes.length == 2 && paramTypes[0] == int[].class && paramTypes[1] == int.class) {
+                Matcher matcherArr = Pattern.compile("\\\\[(.*?)\\\\]").matcher(entradaRaw);
+                int[] nums = new int[0];
+                if (matcherArr.find()) {
+                    String arrStr = matcherArr.group(1).trim();
+                    if (!arrStr.isEmpty()) {
+                        nums = Arrays.stream(arrStr.split(","))
+                                     .map(String::trim)
+                                     .mapToInt(Integer::parseInt)
+                                     .toArray();
+                    }
+                }
+
+                Matcher matcherTarget = Pattern.compile("-?\\\\d+$").matcher(entradaRaw.trim());
+                int target = 0;
+                if (matcherTarget.find()) {
+                    target = Integer.parseInt(matcherTarget.group());
+                }
+
+                return new Object[]{nums, target};
+            }
+
+            // 2. Método con firma (int) -> FizzBuzz
+            if (paramTypes.length == 1 && paramTypes[0] == int.class) {
+                Matcher matcher = Pattern.compile("-?\\\\d+").matcher(entradaRaw);
+                int val = matcher.find() ? Integer.parseInt(matcher.group()) : 0;
+                return new Object[]{val};
+            }
+
+            return new Object[]{entradaRaw};
+        }
+
+        private String formatearSalida(Object obj) {
+                        if (obj == null) return "null";
+                        if (obj instanceof int[]) return Arrays.toString((int[]) obj);
+                        if (obj instanceof Collection<?>) {
+                            // Formatear List<String> incluyendo comillas para coincidir con la BD
+                            Collection<?> col = (Collection<?>) obj;
+                            StringBuilder sb = new StringBuilder("[");
+                            int idx = 0;
+                            for (Object item : col) {
+                                sb.append("\\"").append(item).append("\\"");
+                                if (idx < col.size() - 1) sb.append(",");
+                                idx++;
+                            }
+                            sb.append("]");
+                            return sb.toString();
+                        }
+                        return obj.toString();
+                    }
+                
+                    private void assertResultado(String esperada, Object obtenido) {
+                        String obtenidoStr = formatearSalida(obtenido);
+                
+                        // Normalizar quitando comillas y espacios para comparar igualdad estructural limpia
+                        String expLimpia = esperada.replace("\\"", "").replaceAll("\\\\s+", "");
+                        String obtLimpia = obtenidoStr.replace("\\"", "").replaceAll("\\\\s+", "");
+                
+                        assertEquals(expLimpia, obtLimpia,\s
+                                "Evaluación fallida. Esperado: " + esperada + " pero se obtuvo: " + obtenidoStr);
+                    }
+    """);
 
         sb.append("}\n");
         return sb.toString();
