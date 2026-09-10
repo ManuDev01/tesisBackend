@@ -31,4 +31,8 @@ public class LeccionService {
                 .map(LeccionDTO::fromEntity)
                 .collect(Collectors.toList());
     }
+
+    public void completarLeccion (Integer idSeccion) {
+        return;
+    }
 }

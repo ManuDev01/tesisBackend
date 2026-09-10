@@ -6,6 +6,7 @@ import org.apache.coyote.Response;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -31,6 +32,11 @@ public class LeccionController {
     public ResponseEntity<List<LeccionDTO>> getLeccionByIdSeccion(@PathVariable Integer idSeccion) {
         List<LeccionDTO> leccion = leccionService.getQuizzByIdSeccion(idSeccion);
         return ResponseEntity.ok(leccion);
+
+    }
+
+    @PatchMapping("/completeLeccion/{idLeccion}")
+    public void completeLeccion(@PathVariable Integer idLeccion) {
 
     }
 
