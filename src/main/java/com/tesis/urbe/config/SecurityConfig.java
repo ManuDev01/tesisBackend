@@ -37,7 +37,8 @@ public class SecurityConfig {
         // Permite el puerto local de desarrollo y/o tu dominio de producción
         configuration.setAllowedOrigins(List.of(
             "http://localhost:3000", 
-            "http://localhost:5173" // Agrega aquí si usas Vite u otros puertos
+            "http://localhost:5173",
+                "https://front-de-tesis.vercel.app/"
         ));
         
         // Si deseas permitir CUALQUIER origen en fase de desarrollo, puedes usar:
