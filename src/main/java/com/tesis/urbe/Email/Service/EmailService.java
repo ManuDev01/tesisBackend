@@ -12,8 +12,8 @@ import java.util.Map;
 public class EmailService {
 
 
-    // api re_SgN73Foc_3uYxJQfogV1nQpxVcuLb68wE
-    @Value("${resend.api.key}")
+
+
     private String apiKey;
 
     private final RestClient restClient = RestClient.create();
