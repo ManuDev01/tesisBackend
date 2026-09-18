@@ -8,5 +8,6 @@ public interface UserRepository extends JpaRepository<UserEntity, Integer> {
 
     // Busca coincidencia por nombreUsuario O por correo
     Optional<UserEntity> findByNombreUsuarioOrCorreo(String nombreUsuario, String correo);
+    Optional<UserEntity> findByCorreo(String correo);
 
 }
