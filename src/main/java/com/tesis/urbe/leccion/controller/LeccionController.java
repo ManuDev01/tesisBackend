@@ -2,17 +2,12 @@ package com.tesis.urbe.leccion.controller;
 
 import com.tesis.urbe.leccion.dto.LeccionDTO;
 import com.tesis.urbe.leccion.service.LeccionService;
-import org.apache.coyote.Response;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Controller
+@RestController
 @RequestMapping("/leccion")
 public class LeccionController {
 
@@ -32,12 +27,17 @@ public class LeccionController {
     public ResponseEntity<List<LeccionDTO>> getLeccionByIdSeccion(@PathVariable Integer idSeccion) {
         List<LeccionDTO> leccion = leccionService.getQuizzByIdSeccion(idSeccion);
         return ResponseEntity.ok(leccion);
-
     }
 
-    @PatchMapping("/completeLeccion/{idLeccion}")
-    public void completeLeccion(@PathVariable Integer idLeccion) {
-
+    @GetMapping("/getLeccionesByUsuario/{idUsuario}")
+    public ResponseEntity<List<LeccionDTO>> getAllLeccionesByUsuario(@PathVariable Integer idUsuario) {
+        List<LeccionDTO> lecciones = leccionService.getAllLeccionesByUsuario(idUsuario);
+        return ResponseEntity.ok(lecciones);
     }
 
+    @PatchMapping("/completeLeccion/{idLeccion}/user/{idUsuario}")
+    public ResponseEntity<Void> completeLeccion(@PathVariable Integer idLeccion, @PathVariable Integer idUsuario) {
+        leccionService.completarLeccion(idLeccion, idUsuario);
+        return ResponseEntity.ok().build();
+    }
 }
