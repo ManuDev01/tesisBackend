@@ -40,4 +40,6 @@ public class LeccionController {
         leccionService.completarLeccion(idLeccion, idUsuario);
         return ResponseEntity.ok().build();
     }
+
+
 }

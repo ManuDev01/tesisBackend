@@ -13,9 +13,10 @@ public record ProyectosDTO(
         Integer puntosProyectos,
         Integer idCasoDeUso,
         LocalDate createAt,
-        String decripcion
+        String decripcion,
+        boolean completado
 ) {
-    public static ProyectosDTO fromEntity(ProyectosEntity entity) {
+    public static ProyectosDTO fromEntity(ProyectosEntity entity, boolean completado) {
         if (entity == null) return null;
 
         return new ProyectosDTO(
@@ -28,7 +29,8 @@ public record ProyectosDTO(
                 entity.getPuntosProyectos(),
                 entity.getIdCasoDeUso() != null ? entity.getIdCasoDeUso().getIdCasoDeUso() : null,
                 entity.getCreateAt() != null ? entity.getCreateAt().toLocalDate() : null,
-                entity.getDecripcion()
+                entity.getDecripcion(),
+                completado
         );
     }
 }
