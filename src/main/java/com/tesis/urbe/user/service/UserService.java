@@ -65,6 +65,10 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con el ID: " + idUsuario));
     }
 
+    public void getUsersOrderByExp() {
+        
+    }
+
     // POST - Guardar usuario directo
     public UserDTO saveUser(UserDTO userDTO) {
 

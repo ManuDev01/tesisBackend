@@ -62,4 +62,8 @@ public class UserController {
         DeleteUserDTO deleteUser = userService.deleteUser(deleteUserDTO);
         return ResponseEntity.ok(deleteUser);
     }
+
+    public void getUsersOrderByExp() {
+
+    }
 }
