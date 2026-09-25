@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface ProyectosRepository extends ListCrudRepository<ProyectosEntity, Integer> {
     List<ProyectosEntity> findByIdSeccion_IdSeccion(Integer idSeccion);
+    List<ProyectosEntity> findByIdProyectoIn(List<Integer> idsProyectos);
 }

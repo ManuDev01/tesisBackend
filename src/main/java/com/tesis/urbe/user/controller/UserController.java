@@ -39,6 +39,12 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
+    @GetMapping("/obtainExp/{idUsuario}")
+    public ResponseEntity<Integer> obtainExp(@PathVariable Integer idUsuario) {
+        Integer totalExp = userService.obtainExp(idUsuario);
+        return ResponseEntity.ok(totalExp);
+    }
+
     @PostMapping("/saveUser")
     public ResponseEntity<UserDTO> saveUser(@RequestBody UserDTO userDTO) {
         UserDTO savedUser = userService.saveUser(userDTO);
