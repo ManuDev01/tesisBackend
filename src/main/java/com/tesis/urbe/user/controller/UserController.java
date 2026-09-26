@@ -63,7 +63,9 @@ public class UserController {
         return ResponseEntity.ok(deleteUser);
     }
 
-    public void getUsersOrderByExp() {
-
-    }
+    @GetMapping("/getUserOrderByExp")
+public ResponseEntity<List<UserRankingDTO>> getUsersOrderByExp() {
+    List<UserRankingDTO> ranking = userService.getUsersOrderByExp();
+    return ResponseEntity.ok(ranking);
+}
 }

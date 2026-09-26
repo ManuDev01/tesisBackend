@@ -163,4 +163,21 @@ public class UserService {
         // Suma total de experiencia
         return expLecciones + expProyectos + expMedallas;
     }
+
+    public List<UserRankingDTO> getUsersOrderByExp() {
+    return userRepository.findAll()
+            .stream()
+            .map(user -> {
+                Integer exp = obtainExp(user.getIdUsuario());
+                return new UserRankingDTO(
+                        user.getIdUsuario(),
+                        user.getNombreUsuario(),
+                        user.getPrimerNombre(),
+                        user.getPrimerApellido(),
+                        exp
+                );
+            })
+            .sorted((u1, u2) -> u2.totalExp().compareTo(u1.totalExp())) // Orden descendente
+            .collect(Collectors.toList());
+}
 }
