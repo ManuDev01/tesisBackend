@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.tesis.urbe.user.dto.DeleteUserDTO;
 import com.tesis.urbe.user.dto.UpdateUserDTO;
+import com.tesis.urbe.user.dto.UserRankingDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

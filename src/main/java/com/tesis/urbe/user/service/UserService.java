@@ -15,6 +15,7 @@ import com.tesis.urbe.proyectos.repository.UsuarioConProyectoRepository;
 import com.tesis.urbe.rol.entity.RolEntity;
 import com.tesis.urbe.user.dto.DeleteUserDTO;
 import com.tesis.urbe.user.dto.UpdateUserDTO;
+import com.tesis.urbe.user.dto.UserRankingDTO;
 import com.tesis.urbe.user.entity.UserEntity;
 import org.hibernate.sql.Update;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,10 +64,6 @@ public class UserService {
         return userRepository.findById(idUsuario)
                 .map(UserDTO::fromEntity)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con el ID: " + idUsuario));
-    }
-
-    public void getUsersOrderByExp() {
-        
     }
 
     // POST - Guardar usuario directo
