@@ -1,7 +1,6 @@
 package com.tesis.urbe.seccion.entity;
 
 import jakarta.persistence.*;
-import org.springframework.stereotype.Service;
 
 @Entity
 @Table(name = "seccion")
@@ -9,10 +8,16 @@ public class SeccionEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "idSeccion")
+    @Column(name = "idseccion")
     private Integer idSeccion;
 
-    @Column(name = "titulo")
+    @Column(name = "idcurso", nullable = false)
+    private Integer idCurso;
+
+    @Column(name = "orden", nullable = false)
+    private Integer orden;
+
+    @Column(name = "titulo", nullable = false)
     private String titulo;
 
     @Column(name = "descripcion")
@@ -21,21 +26,19 @@ public class SeccionEntity {
     @Column(name = "estado")
     private String estado;
 
-    @Column(name = "puntosSeccion")
+    @Column(name = "puntosseccion")
     private Integer puntosSeccion;
 
-    public SeccionEntity() {
+    public SeccionEntity() {}
 
-    }
-
-    public SeccionEntity(Integer idSeccion, String titulo, String descripcion, String estado, Integer puntosSeccion) {
-        this.idSeccion = idSeccion;
+    public SeccionEntity(Integer idCurso, Integer orden, String titulo, String descripcion, String estado, Integer puntosSeccion) {
+        this.idCurso = idCurso;
+        this.orden = orden;
         this.titulo = titulo;
         this.descripcion = descripcion;
         this.estado = estado;
         this.puntosSeccion = puntosSeccion;
     }
-
 
     public Integer getIdSeccion() {
         return idSeccion;
@@ -43,6 +46,22 @@ public class SeccionEntity {
 
     public void setIdSeccion(Integer idSeccion) {
         this.idSeccion = idSeccion;
+    }
+
+    public Integer getIdCurso() {
+        return idCurso;
+    }
+
+    public void setIdCurso(Integer idCurso) {
+        this.idCurso = idCurso;
+    }
+
+    public Integer getOrden() {
+        return orden;
+    }
+
+    public void setOrden(Integer orden) {
+        this.orden = orden;
     }
 
     public String getTitulo() {

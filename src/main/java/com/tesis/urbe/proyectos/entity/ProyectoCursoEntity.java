@@ -1,17 +1,19 @@
 package com.tesis.urbe.proyectos.entity;
 
-import com.tesis.urbe.casosDeUso.entity.CasosDeUsoEntity;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "proyectos")
-public class ProyectosEntity {
+@Table(name = "proyectocurso")
+public class ProyectoCursoEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "idproyecto")
-    private Integer idProyecto;
+    @Column(name = "idproyectocurso")
+    private Integer idProyectoCurso;
+
+    @Column(name = "idcurso", nullable = false)
+    private Integer idCurso;
 
     @Column(name = "titulo", nullable = false)
     private String titulo;
@@ -25,24 +27,28 @@ public class ProyectosEntity {
     @Column(name = "estado")
     private String estado;
 
-    @Column(name = "puntosproyectos")
-    private Integer puntosProyectos;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "idcasodeuso", referencedColumnName = "idcasodeuso")
-    private CasosDeUsoEntity casoDeUso;
+    @Column(name = "puntosproyecto")
+    private Integer puntosProyecto;
 
     @Column(name = "createdat", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    public ProyectosEntity() {}
+    public ProyectoCursoEntity() {}
 
-    public Integer getIdProyecto() {
-        return idProyecto;
+    public Integer getIdProyectoCurso() {
+        return idProyectoCurso;
     }
 
-    public void setIdProyecto(Integer idProyecto) {
-        this.idProyecto = idProyecto;
+    public void setIdProyectoCurso(Integer idProyectoCurso) {
+        this.idProyectoCurso = idProyectoCurso;
+    }
+
+    public Integer getIdCurso() {
+        return idCurso;
+    }
+
+    public void setIdCurso(Integer idCurso) {
+        this.idCurso = idCurso;
     }
 
     public String getTitulo() {
@@ -77,20 +83,12 @@ public class ProyectosEntity {
         this.estado = estado;
     }
 
-    public Integer getPuntosProyectos() {
-        return puntosProyectos;
+    public Integer getPuntosProyecto() {
+        return puntosProyecto;
     }
 
-    public void setPuntosProyectos(Integer puntosProyectos) {
-        this.puntosProyectos = puntosProyectos;
-    }
-
-    public CasosDeUsoEntity getCasoDeUso() {
-        return casoDeUso;
-    }
-
-    public void setCasoDeUso(CasosDeUsoEntity casoDeUso) {
-        this.casoDeUso = casoDeUso;
+    public void setPuntosProyecto(Integer puntosProyecto) {
+        this.puntosProyecto = puntosProyecto;
     }
 
     public LocalDateTime getCreatedAt() {

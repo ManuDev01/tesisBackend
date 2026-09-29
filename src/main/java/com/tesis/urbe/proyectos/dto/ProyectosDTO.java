@@ -5,15 +5,13 @@ import java.time.LocalDate;
 
 public record ProyectosDTO(
         Integer idProyecto,
-        Integer idSeccion,
         String titulo,
         String descripcion,
         String codigo,
         String estado,
         Integer puntosProyectos,
         Integer idCasoDeUso,
-        LocalDate createAt,
-        String decripcion,
+        LocalDate createdAt,
         boolean completado
 ) {
     public static ProyectosDTO fromEntity(ProyectosEntity entity, boolean completado) {
@@ -21,15 +19,13 @@ public record ProyectosDTO(
 
         return new ProyectosDTO(
                 entity.getIdProyecto(),
-                entity.getIdSeccion() != null ? entity.getIdSeccion().getIdSeccion() : null,
                 entity.getTitulo(),
                 entity.getDescripcion(),
                 entity.getCodigo(),
                 entity.getEstado(),
                 entity.getPuntosProyectos(),
-                entity.getIdCasoDeUso() != null ? entity.getIdCasoDeUso().getIdCasoDeUso() : null,
-                entity.getCreateAt() != null ? entity.getCreateAt().toLocalDate() : null,
-                entity.getDecripcion(),
+                entity.getCasoDeUso() != null ? entity.getCasoDeUso().getIdCasoDeUso() : null,
+                entity.getCreatedAt() != null ? entity.getCreatedAt().toLocalDate() : null,
                 completado
         );
     }

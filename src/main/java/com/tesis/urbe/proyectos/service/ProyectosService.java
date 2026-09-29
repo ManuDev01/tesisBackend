@@ -1,6 +1,5 @@
 package com.tesis.urbe.proyectos.service;
 
-
 import com.tesis.urbe.proyectos.dto.ProyectosDTO;
 import com.tesis.urbe.proyectos.entity.UsuarioConProyectosEntity;
 import com.tesis.urbe.proyectos.repository.ProyectosRepository;
@@ -36,8 +35,8 @@ public class ProyectosService {
                 .map(UsuarioConProyectosEntity::getIdProyecto)
                 .collect(Collectors.toSet());
 
-        // 2. Traer los proyectos de la sección 8 y marcar completado = true / false
-        return proyectosRepository.findByIdSeccion_IdSeccion(8)
+        // 2. Traer todos los proyectos independientes y marcar completado = true / false
+        return proyectosRepository.findAll()
                 .stream()
                 .map(proyecto -> {
                     boolean estaCompletado = proyectosCompletadosIds.contains(proyecto.getIdProyecto());
@@ -50,5 +49,4 @@ public class ProyectosService {
         UsuarioConProyectosEntity entity = new UsuarioConProyectosEntity(idUsuario, idProyecto);
         usuarioConProyectoRepository.save(entity);
     }
-
 }
