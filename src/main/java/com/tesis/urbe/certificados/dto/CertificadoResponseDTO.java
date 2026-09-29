@@ -4,10 +4,12 @@ import java.time.LocalDateTime;
 
 public record CertificadoResponseDTO(
         Integer idCertificado,
-        Integer studentId,
-        String studentDni,
-        Integer courseId,
+        Integer idUsuario,
+        String nombreCompleto, // Se añade para el nombre concatenado
+        String cedula,
+        Integer idCurso,
         String titulo,
         String descripcion,
-        LocalDateTime issueDate
+        LocalDateTime fechaEmision,
+        String uidCertificado
 ) {}

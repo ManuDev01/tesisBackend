@@ -25,9 +25,15 @@ public class CertificadoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(certificado);
     }
 
-    @GetMapping("/usuario/{idUsuario}")
+    @GetMapping("/getCertificadoByIdUsuario/{idUsuario}")
     public ResponseEntity<List<CertificadoResponseDTO>> getCertificadosByUsuario(@PathVariable Integer idUsuario) {
-        List<CertificadoResponseDTO> certificados = certificadoService.getCertificadosByUsuario(idUsuario);
+        List<CertificadoResponseDTO> certificados = certificadoService.getCertificadosByIdUsuario(idUsuario);
         return ResponseEntity.ok(certificados);
+    }
+
+    @GetMapping("/getCertificadoByUid/{uidCertificado}")
+    public ResponseEntity<CertificadoResponseDTO> getCertificadoByUid(@PathVariable String uidCertificado) {
+        CertificadoResponseDTO respuesta = certificadoService.getCertificadoByUid(uidCertificado);
+        return ResponseEntity.ok(respuesta);
     }
 }

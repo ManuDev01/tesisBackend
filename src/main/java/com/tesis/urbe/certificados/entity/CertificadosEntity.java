@@ -27,13 +27,17 @@ public class CertificadosEntity {
     @Column(name = "fechaemision", insertable = false, updatable = false)
     private LocalDateTime fechaEmision;
 
+    @Column(name = "\"uidCertificado\"", unique = true)
+    private String uidCertificado;
+
     public CertificadosEntity() {}
 
-    public CertificadosEntity(Integer idUsuario, Integer idCurso, String titulo, String descripcion) {
+    public CertificadosEntity(Integer idUsuario, Integer idCurso, String titulo, String descripcion, String uidCertificado) {
         this.idUsuario = idUsuario;
         this.idCurso = idCurso;
         this.titulo = titulo;
         this.descripcion = descripcion;
+        this.uidCertificado = uidCertificado;
     }
 
     public Integer getIdCertificado() {
@@ -82,5 +86,13 @@ public class CertificadosEntity {
 
     public void setFechaEmision(LocalDateTime fechaEmision) {
         this.fechaEmision = fechaEmision;
+    }
+
+    public String getUidCertificado() {
+        return uidCertificado;
+    }
+
+    public void setUidCertificado(String uidCertificado) {
+        this.uidCertificado = uidCertificado;
     }
 }
