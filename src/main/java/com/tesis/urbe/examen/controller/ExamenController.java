@@ -1,0 +1,23 @@
+package com.tesis.urbe.examen.controller;
+
+import com.tesis.urbe.examen.dto.ExamenDTO;
+import com.tesis.urbe.examen.service.ExamenService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/examen")
+public class ExamenController {
+
+    private final ExamenService examenService;
+
+    public ExamenController(ExamenService examenService) {
+        this.examenService = examenService;
+    }
+
+    @GetMapping("/getExamenByIdSeccion/{idSeccion}")
+    public ResponseEntity<ExamenDTO> getExamenByIdSeccion(@PathVariable Integer idSeccion) {
+        ExamenDTO examen = examenService.getExamenByIdSeccion(idSeccion);
+        return ResponseEntity.ok(examen);
+    }
+}
