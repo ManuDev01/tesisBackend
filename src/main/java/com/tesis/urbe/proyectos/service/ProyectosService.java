@@ -1,7 +1,10 @@
 package com.tesis.urbe.proyectos.service;
 
+import com.tesis.urbe.proyectos.dto.ProyectoCursoDTO;
 import com.tesis.urbe.proyectos.dto.ProyectosDTO;
+import com.tesis.urbe.proyectos.entity.ProyectoCursoEntity;
 import com.tesis.urbe.proyectos.entity.UsuarioConProyectosEntity;
+import com.tesis.urbe.proyectos.repository.ProyectoCursoRepository;
 import com.tesis.urbe.proyectos.repository.ProyectosRepository;
 import com.tesis.urbe.proyectos.repository.UsuarioConProyectoRepository;
 import org.springframework.stereotype.Service;
@@ -15,10 +18,14 @@ public class ProyectosService {
 
     private final ProyectosRepository proyectosRepository;
     private final UsuarioConProyectoRepository usuarioConProyectoRepository;
+    private final ProyectoCursoRepository proyectoCursoRepository;
 
-    public ProyectosService(ProyectosRepository proyectosRepository, UsuarioConProyectoRepository usuarioConProyectoRepository) {
+    public ProyectosService(ProyectosRepository proyectosRepository,
+                            UsuarioConProyectoRepository usuarioConProyectoRepository,
+                            ProyectoCursoRepository proyectoCursoRepository) {
         this.proyectosRepository = proyectosRepository;
         this.usuarioConProyectoRepository = usuarioConProyectoRepository;
+        this.proyectoCursoRepository = proyectoCursoRepository;
     }
 
     public List<ProyectosDTO> getProyectos() {
@@ -29,13 +36,11 @@ public class ProyectosService {
     }
 
     public List<ProyectosDTO> getProyectosLibresByUsuario(Integer idUsuario) {
-        // 1. Obtener IDs de proyectos que el usuario ya completó
         Set<Integer> proyectosCompletadosIds = usuarioConProyectoRepository.findByIdUsuario(idUsuario)
                 .stream()
                 .map(UsuarioConProyectosEntity::getIdProyecto)
                 .collect(Collectors.toSet());
 
-        // 2. Traer todos los proyectos independientes y marcar completado = true / false
         return proyectosRepository.findAll()
                 .stream()
                 .map(proyecto -> {
@@ -43,6 +48,12 @@ public class ProyectosService {
                     return ProyectosDTO.fromEntity(proyecto, estaCompletado);
                 })
                 .collect(Collectors.toList());
+    }
+
+    public ProyectoCursoDTO getProyectoCursoByCursoId(Integer idCurso) {
+        ProyectoCursoEntity entity = proyectoCursoRepository.findByIdCurso(idCurso)
+                .orElse(null);
+        return ProyectoCursoDTO.fromEntity(entity);
     }
 
     public void saveUsuarioConProyecto(Integer idUsuario, Integer idProyecto) {

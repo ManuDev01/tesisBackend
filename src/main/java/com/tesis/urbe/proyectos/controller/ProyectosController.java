@@ -1,4 +1,5 @@
 package com.tesis.urbe.proyectos.controller;
+import com.tesis.urbe.proyectos.dto.ProyectoCursoDTO;
 import com.tesis.urbe.proyectos.dto.ProyectosDTO;
 import com.tesis.urbe.proyectos.service.ProyectosService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,15 @@ public class ProyectosController {
     public ResponseEntity<List<ProyectosDTO>> getProyectosLibres(@PathVariable Integer idUsuario) {
         List<ProyectosDTO> proyectosLibres = proyectosService.getProyectosLibresByUsuario(idUsuario);
         return ResponseEntity.ok(proyectosLibres);
+    }
+
+    @GetMapping("/getProyectoCurso/{idCurso}")
+    public ResponseEntity<ProyectoCursoDTO> getProyectoCurso(@PathVariable Integer idCurso) {
+        ProyectoCursoDTO proyecto = proyectosService.getProyectoCursoByCursoId(idCurso);
+        if (proyecto == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(proyecto);
     }
 
     @PostMapping("/completarProyecto/{idUsuario}/{idProyecto}")
