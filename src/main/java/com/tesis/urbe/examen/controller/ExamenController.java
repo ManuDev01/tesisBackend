@@ -2,6 +2,7 @@ package com.tesis.urbe.examen.controller;
 
 import com.tesis.urbe.examen.dto.ExamenDTO;
 import com.tesis.urbe.examen.dto.PreguntaExamenDTO;
+import com.tesis.urbe.examen.entity.UsuarioEnExamenEntity;
 import com.tesis.urbe.examen.service.ExamenService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,6 +29,12 @@ public class ExamenController {
     public ResponseEntity<List<PreguntaExamenDTO>> getPreguntasByExamen(@PathVariable Integer idExamen) {
         List<PreguntaExamenDTO> preguntas = examenService.getPreguntasByExamen(idExamen);
         return ResponseEntity.ok(preguntas);
+    }
+
+    @GetMapping("/getExamenesByUsuario/{idUsuario}")
+    public ResponseEntity<List<UsuarioEnExamenEntity>> getExamenesByUsuario(@PathVariable Integer idUsuario) {
+        List<UsuarioEnExamenEntity> examenes = examenService.getExamenesByUsuario(idUsuario);
+        return ResponseEntity.ok(examenes);
     }
 
     @PostMapping("/completarExamen/{idExamen}/user/{idUsuario}")

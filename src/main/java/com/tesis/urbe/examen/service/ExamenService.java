@@ -69,4 +69,8 @@ public class ExamenService {
             usuarioEnExamenRepository.save(registro);
         }
     }
+
+    public List<UsuarioEnExamenEntity> getExamenesByUsuario(Integer idUsuario) {
+        return usuarioEnExamenRepository.findByIdUsuario(idUsuario);
+    }
 }
