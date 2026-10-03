@@ -3,8 +3,10 @@ package com.tesis.urbe.examen.service;
 import com.tesis.urbe.examen.dto.ExamenDTO;
 import com.tesis.urbe.examen.dto.PreguntaExamenDTO;
 import com.tesis.urbe.examen.entity.ExamenEntity;
+import com.tesis.urbe.examen.entity.UsuarioEnExamenEntity;
 import com.tesis.urbe.examen.repository.ExamenRepository;
 import com.tesis.urbe.examen.repository.PreguntaExamenRepository;
+import com.tesis.urbe.examen.repository.UsuarioEnExamenRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,10 +17,12 @@ public class ExamenService {
 
     private final ExamenRepository examenRepository;
     private final PreguntaExamenRepository preguntaExamenRepository;
+    private final UsuarioEnExamenRepository usuarioEnExamenRepository;
 
-    public ExamenService(ExamenRepository examenRepository, PreguntaExamenRepository preguntaExamenRepository) {
+    public ExamenService(ExamenRepository examenRepository, PreguntaExamenRepository preguntaExamenRepository, UsuarioEnExamenRepository usuarioEnExamenRepository) {
         this.examenRepository = examenRepository;
         this.preguntaExamenRepository = preguntaExamenRepository;
+        this.usuarioEnExamenRepository = usuarioEnExamenRepository;
     }
 
     public ExamenDTO getExamenByIdSeccion(Integer idSeccion) {
@@ -52,5 +56,17 @@ public class ExamenService {
                         q.getPuntos()
                 ))
                 .collect(Collectors.toList());
+    }
+
+    public void completarExamen(Integer idExamen, Integer idUsuario) {
+        // Validar si ya existe el registro para no duplicar
+        boolean yaCompletado = usuarioEnExamenRepository.existsByIdUsuarioAndIdExamen(idUsuario, idExamen);
+
+        if (!yaCompletado) {
+            UsuarioEnExamenEntity registro = new UsuarioEnExamenEntity();
+            registro.setIdExamen(idExamen);
+            registro.setIdUsuario(idUsuario);
+            usuarioEnExamenRepository.save(registro);
+        }
     }
 }

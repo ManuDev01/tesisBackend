@@ -29,4 +29,10 @@ public class ExamenController {
         List<PreguntaExamenDTO> preguntas = examenService.getPreguntasByExamen(idExamen);
         return ResponseEntity.ok(preguntas);
     }
+
+    @PostMapping("/completarExamen/{idExamen}/user/{idUsuario}")
+    public ResponseEntity<Void> completarExamen(@PathVariable Integer idExamen, @PathVariable Integer idUsuario) {
+        examenService.completarExamen(idExamen, idUsuario);
+        return ResponseEntity.ok().build();
+    }
 }
