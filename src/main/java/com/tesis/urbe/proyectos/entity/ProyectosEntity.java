@@ -28,6 +28,9 @@ public class ProyectosEntity {
     @Column(name = "puntosproyectos")
     private Integer puntosProyectos;
 
+    @Column(name = "dificultad")
+    private String dificultad; // "FACIL", "MEDIO", "DIFICIL"
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "idcasodeuso", referencedColumnName = "idcasodeuso")
     private CasosDeUsoEntity casoDeUso;
@@ -83,6 +86,14 @@ public class ProyectosEntity {
 
     public void setPuntosProyectos(Integer puntosProyectos) {
         this.puntosProyectos = puntosProyectos;
+    }
+
+    public String getDificultad() {
+        return dificultad;
+    }
+
+    public void setDificultad(String dificultad) {
+        this.dificultad = dificultad;
     }
 
     public CasosDeUsoEntity getCasoDeUso() {

@@ -162,19 +162,20 @@ public class UserService {
     }
 
     public List<UserRankingDTO> getUsersOrderByExp() {
-    return userRepository.findAll()
-            .stream()
-            .map(user -> {
-                Integer exp = obtainExp(user.getIdUsuario());
-                return new UserRankingDTO(
-                        user.getIdUsuario(),
-                        user.getNombreUsuario(),
-                        user.getPrimerNombre(),
-                        user.getPrimerApellido(),
-                        exp
-                );
-            })
-            .sorted((u1, u2) -> u2.totalExp().compareTo(u1.totalExp())) // Orden descendente
-            .collect(Collectors.toList());
-}
+        return userRepository.findAll()
+                .stream()
+                .filter(user -> user.getIdRol() != null && user.getIdRol().getIdRol() != 2) // Excluir administradores
+                .map(user -> {
+                    Integer exp = obtainExp(user.getIdUsuario());
+                    return new UserRankingDTO(
+                            user.getIdUsuario(),
+                            user.getNombreUsuario(),
+                            user.getPrimerNombre(),
+                            user.getPrimerApellido(),
+                            exp
+                    );
+                })
+                .sorted((u1, u2) -> u2.totalExp().compareTo(u1.totalExp())) // Orden descendente
+                .collect(Collectors.toList());
+    }
 }

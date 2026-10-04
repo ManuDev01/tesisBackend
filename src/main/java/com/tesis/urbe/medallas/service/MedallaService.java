@@ -1,6 +1,7 @@
 package com.tesis.urbe.medallas.service;
 
 import com.tesis.urbe.medallas.dto.MedallaDTO;
+import com.tesis.urbe.medallas.dto.UsuarioMedallaCountDTO;
 import com.tesis.urbe.medallas.entity.UsuarioConMedallaEntity;
 import com.tesis.urbe.medallas.repository.MedallaRepository;
 import com.tesis.urbe.medallas.repository.UsuarioConMedallaRepository;
@@ -39,5 +40,9 @@ public class MedallaService {
     public void guardarUsuarioConMedalla(Integer idUsuario, Integer idMedalla) {
         UsuarioConMedallaEntity entity = new UsuarioConMedallaEntity(idUsuario, idMedalla);
         usuarioConMedallaRepository.save(entity);
+    }
+
+    public List<UsuarioMedallaCountDTO> getRankingUsuariosConMasMedallas() {
+        return usuarioConMedallaRepository.obtenerRankingUsuariosConMasMedallas();
     }
 }

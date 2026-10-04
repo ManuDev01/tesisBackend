@@ -1,6 +1,7 @@
 package com.tesis.urbe.medallas.controller;
 
 import com.tesis.urbe.medallas.dto.MedallaDTO;
+import com.tesis.urbe.medallas.dto.UsuarioMedallaCountDTO;
 import com.tesis.urbe.medallas.service.MedallaService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +22,12 @@ public class MedallaController {
     public ResponseEntity<List<MedallaDTO>> getMedallasByUsuario(@PathVariable Integer idUsuario) {
         List<MedallaDTO> medallas = medallaService.getMedallasByUsuario(idUsuario);
         return ResponseEntity.ok(medallas);
+    }
+
+    @GetMapping("/rankingMedallas")
+    public ResponseEntity<List<UsuarioMedallaCountDTO>> getRankingUsuariosConMasMedallas() {
+        List<UsuarioMedallaCountDTO> ranking = medallaService.getRankingUsuariosConMasMedallas();
+        return ResponseEntity.ok(ranking);
     }
 
     @PostMapping("/desbloquearMedalla/{idUsuario}/{idMedalla}")

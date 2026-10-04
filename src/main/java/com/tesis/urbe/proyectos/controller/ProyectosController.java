@@ -1,6 +1,7 @@
 package com.tesis.urbe.proyectos.controller;
 import com.tesis.urbe.proyectos.dto.ProyectoCursoDTO;
 import com.tesis.urbe.proyectos.dto.ProyectosDTO;
+import com.tesis.urbe.proyectos.dto.UsuarioProyectosRankingDTO;
 import com.tesis.urbe.proyectos.service.ProyectosService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -42,6 +43,12 @@ public class ProyectosController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(proyecto);
+    }
+
+    @GetMapping("/rankingProyectos")
+    public ResponseEntity<List<UsuarioProyectosRankingDTO>> getRankingProyectosPorUsuario() {
+        List<UsuarioProyectosRankingDTO> ranking = proyectosService.getRankingProyectosPorUsuario();
+        return ResponseEntity.ok(ranking);
     }
 
     @PostMapping("/completarProyecto/{idUsuario}/{idProyecto}")

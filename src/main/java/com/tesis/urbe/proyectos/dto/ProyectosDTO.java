@@ -12,7 +12,8 @@ public record ProyectosDTO(
         Integer puntosProyectos,
         Integer idCasoDeUso,
         LocalDate createdAt,
-        boolean completado
+        boolean completado,
+        String dificultad
 ) {
     public static ProyectosDTO fromEntity(ProyectosEntity entity, boolean completado) {
         if (entity == null) return null;
@@ -26,7 +27,8 @@ public record ProyectosDTO(
                 entity.getPuntosProyectos(),
                 entity.getCasoDeUso() != null ? entity.getCasoDeUso().getIdCasoDeUso() : null,
                 entity.getCreatedAt() != null ? entity.getCreatedAt().toLocalDate() : null,
-                completado
+                completado,
+                entity.getDificultad()
         );
     }
 }
