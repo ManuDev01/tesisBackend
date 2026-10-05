@@ -6,9 +6,11 @@ import com.tesis.urbe.proyectos.dto.ProyectosDTO;
 import com.tesis.urbe.proyectos.dto.UsuarioProyectosRankingDTO;
 import com.tesis.urbe.proyectos.entity.ProyectoCursoEntity;
 import com.tesis.urbe.proyectos.entity.UsuarioConProyectosEntity;
+import com.tesis.urbe.proyectos.entity.UsuarioEnProyectoCursoEntity;
 import com.tesis.urbe.proyectos.repository.ProyectoCursoRepository;
 import com.tesis.urbe.proyectos.repository.ProyectosRepository;
 import com.tesis.urbe.proyectos.repository.UsuarioConProyectoRepository;
+import com.tesis.urbe.proyectos.repository.UsuarioEnProyectoCursoRepository;
 import com.tesis.urbe.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
@@ -23,14 +25,18 @@ public class ProyectosService {
     private final ProyectosRepository proyectosRepository;
     private final UsuarioConProyectoRepository usuarioConProyectoRepository;
     private final ProyectoCursoRepository proyectoCursoRepository;
+    private final UsuarioEnProyectoCursoRepository usuarioEnProyectoCursoRepository;
     private final UserRepository userRepository;
 
     public ProyectosService(ProyectosRepository proyectosRepository,
                             UsuarioConProyectoRepository usuarioConProyectoRepository,
-                            ProyectoCursoRepository proyectoCursoRepository, UserRepository userRepository) {
+                            ProyectoCursoRepository proyectoCursoRepository,
+                            UsuarioEnProyectoCursoRepository usuarioEnProyectoCursoRepository,
+                            UserRepository userRepository) {
         this.proyectosRepository = proyectosRepository;
         this.usuarioConProyectoRepository = usuarioConProyectoRepository;
         this.proyectoCursoRepository = proyectoCursoRepository;
+        this.usuarioEnProyectoCursoRepository = usuarioEnProyectoCursoRepository;
         this.userRepository = userRepository;
     }
 
@@ -62,6 +68,26 @@ public class ProyectosService {
         return ProyectoCursoDTO.fromEntity(entity);
     }
 
+    public boolean isProyectoCursoCompletado(Integer idUsuario, Integer idProyectoCurso) {
+        return usuarioEnProyectoCursoRepository
+                .findByIdUsuarioAndIdProyectoCurso(idUsuario, idProyectoCurso)
+                .isPresent();
+    }
+
+    public List<Integer> getProyectosCursoCompletadosPorUsuario(Integer idUsuario) {
+        return usuarioEnProyectoCursoRepository.findByIdUsuario(idUsuario)
+                .stream()
+                .map(UsuarioEnProyectoCursoEntity::getIdProyectoCurso)
+                .collect(Collectors.toList());
+    }
+
+    public void saveUsuarioConProyectoCurso(Integer idUsuario, Integer idProyectoCurso) {
+        if (!isProyectoCursoCompletado(idUsuario, idProyectoCurso)) {
+            UsuarioEnProyectoCursoEntity entity = new UsuarioEnProyectoCursoEntity(idUsuario, idProyectoCurso);
+            usuarioEnProyectoCursoRepository.save(entity);
+        }
+    }
+
     public void saveUsuarioConProyecto(Integer idUsuario, Integer idProyecto) {
         UsuarioConProyectosEntity entity = new UsuarioConProyectosEntity(idUsuario, idProyecto);
         usuarioConProyectoRepository.save(entity);
@@ -74,7 +100,7 @@ public class ProyectosService {
                 .collect(Collectors.groupingBy(UsuarioConProyectosEntity::getIdUsuario));
 
         return userRepository.findAll().stream()
-                .filter(user -> user.getIdRol() != null && user.getIdRol().getIdRol() != 2) // Excluir Admins
+                .filter(user -> user.getIdRol() != null && user.getIdRol().getIdRol() != 2)
                 .map(user -> {
                     List<UsuarioConProyectosEntity> registros = proyectosPorUsuarioMap.getOrDefault(user.getIdUsuario(), List.of());
 

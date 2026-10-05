@@ -1,4 +1,5 @@
 package com.tesis.urbe.proyectos.controller;
+
 import com.tesis.urbe.proyectos.dto.ProyectoCursoDTO;
 import com.tesis.urbe.proyectos.dto.ProyectosDTO;
 import com.tesis.urbe.proyectos.dto.UsuarioProyectosRankingDTO;
@@ -6,10 +7,7 @@ import com.tesis.urbe.proyectos.service.ProyectosService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -17,9 +15,9 @@ import java.util.List;
 @RequestMapping("/proyectos")
 public class ProyectosController {
 
-    @Autowired
     private final ProyectosService proyectosService;
 
+    @Autowired
     public ProyectosController(ProyectosService proyectosService) {
         this.proyectosService = proyectosService;
     }
@@ -45,6 +43,12 @@ public class ProyectosController {
         return ResponseEntity.ok(proyecto);
     }
 
+    @GetMapping("/getProyectosCursoCompletados/{idUsuario}")
+    public ResponseEntity<List<Integer>> getProyectosCursoCompletados(@PathVariable Integer idUsuario) {
+        List<Integer> completados = proyectosService.getProyectosCursoCompletadosPorUsuario(idUsuario);
+        return ResponseEntity.ok(completados);
+    }
+
     @GetMapping("/rankingProyectos")
     public ResponseEntity<List<UsuarioProyectosRankingDTO>> getRankingProyectosPorUsuario() {
         List<UsuarioProyectosRankingDTO> ranking = proyectosService.getRankingProyectosPorUsuario();
@@ -57,4 +61,9 @@ public class ProyectosController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/completarProyectoCurso/{idUsuario}/{idProyectoCurso}")
+    public ResponseEntity<Void> postUsuarioConProyectoCurso(@PathVariable Integer idUsuario, @PathVariable Integer idProyectoCurso) {
+        this.proyectosService.saveUsuarioConProyectoCurso(idUsuario, idProyectoCurso);
+        return ResponseEntity.ok().build();
+    }
 }

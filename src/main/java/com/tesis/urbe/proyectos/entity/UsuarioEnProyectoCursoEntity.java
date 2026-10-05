@@ -18,8 +18,6 @@ public class UsuarioEnProyectoCursoEntity {
     @Column(name = "idproyectocurso", nullable = false)
     private Integer idProyectoCurso;
 
-    @Column(name = "completado", nullable = false)
-    private Boolean completado = true;
 
     @Column(name = "fechacompletado", insertable = false, updatable = false)
     private LocalDateTime fechaCompletado;
@@ -29,7 +27,6 @@ public class UsuarioEnProyectoCursoEntity {
     public UsuarioEnProyectoCursoEntity(Integer idUsuario, Integer idProyectoCurso) {
         this.idUsuario = idUsuario;
         this.idProyectoCurso = idProyectoCurso;
-        this.completado = true;
     }
 
     public Integer getIdUsuarioEnProyectoCurso() {
@@ -54,14 +51,6 @@ public class UsuarioEnProyectoCursoEntity {
 
     public void setIdProyectoCurso(Integer idProyectoCurso) {
         this.idProyectoCurso = idProyectoCurso;
-    }
-
-    public Boolean getCompletado() {
-        return completado;
-    }
-
-    public void setCompletado(Boolean completado) {
-        this.completado = completado;
     }
 
     public LocalDateTime getFechaCompletado() {

@@ -3,10 +3,13 @@ package com.tesis.urbe.certificados.service;
 import com.tesis.urbe.certificados.dto.CertificadoResponseDTO;
 import com.tesis.urbe.certificados.dto.GuardarCertificadoDTO;
 import com.tesis.urbe.certificados.entity.CertificadosEntity;
+import com.tesis.urbe.certificados.entity.UsuarioCertificadoEntity;
 import com.tesis.urbe.certificados.repository.CertificadosRepository;
+import com.tesis.urbe.certificados.repository.UsuarioCertificadoRepository;
 import com.tesis.urbe.user.entity.UserEntity;
 import com.tesis.urbe.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -18,37 +21,48 @@ import java.util.stream.Collectors;
 public class CertificadoService {
 
     private final CertificadosRepository certificadosRepository;
+    private final UsuarioCertificadoRepository usuarioCertificadoRepository;
     private final UserRepository userRepository;
 
-    public CertificadoService(CertificadosRepository certificadosRepository, UserRepository userRepository) {
+    public CertificadoService(
+            CertificadosRepository certificadosRepository,
+            UsuarioCertificadoRepository usuarioCertificadoRepository,
+            UserRepository userRepository) {
         this.certificadosRepository = certificadosRepository;
+        this.usuarioCertificadoRepository = usuarioCertificadoRepository;
         this.userRepository = userRepository;
     }
 
+    @Transactional
     public CertificadoResponseDTO guardarCertificado(GuardarCertificadoDTO dto) {
         UserEntity usuario = userRepository.findById(dto.idUsuario())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + dto.idUsuario()));
 
-        String uidCertificado = generarUidCertificadoSHA256(dto.idUsuario(), dto.idCurso(), dto.titulo());
+        CertificadosEntity certificado = certificadosRepository.findByIdCurso(dto.idCurso())
+                .orElseThrow(() -> new RuntimeException("No existe plantilla de certificado para el curso ID: " + dto.idCurso()));
 
-        CertificadosEntity entity = new CertificadosEntity(
-                dto.idUsuario(),
-                dto.idCurso(),
-                dto.titulo(),
-                dto.descripcion(),
+        if (usuarioCertificadoRepository.existsByIdUsuarioAndIdCertificado(usuario.getIdUsuario(), certificado.getIdCertificado())) {
+            throw new RuntimeException("El usuario ya tiene un certificado emitido para este curso.");
+        }
+
+        String uidCertificado = generarUidCertificadoSHA256(usuario.getIdUsuario(), certificado.getIdCurso(), certificado.getTitulo());
+
+        UsuarioCertificadoEntity relacion = new UsuarioCertificadoEntity(
+                usuario.getIdUsuario(),
+                certificado.getIdCertificado(),
                 uidCertificado
         );
 
-        CertificadosEntity guardado = certificadosRepository.save(entity);
+        UsuarioCertificadoEntity guardado = usuarioCertificadoRepository.save(relacion);
 
         return new CertificadoResponseDTO(
-                guardado.getIdCertificado(),
+                certificado.getIdCertificado(),
                 usuario.getIdUsuario(),
                 construirNombreCompleto(usuario),
                 usuario.getCedula(),
-                guardado.getIdCurso(),
-                guardado.getTitulo(),
-                guardado.getDescripcion(),
+                certificado.getIdCurso(),
+                certificado.getTitulo(),
+                certificado.getDescripcion(),
                 guardado.getFechaEmision(),
                 guardado.getUidCertificado()
         );
@@ -60,40 +74,53 @@ public class CertificadoService {
 
         String nombreCompleto = construirNombreCompleto(usuario);
 
-        return certificadosRepository.findByIdUsuario(idUsuario)
+        return usuarioCertificadoRepository.findByIdUsuario(idUsuario)
                 .stream()
-                .map(certificado -> new CertificadoResponseDTO(
-                        certificado.getIdCertificado(),
-                        usuario.getIdUsuario(),
-                        nombreCompleto,
-                        usuario.getCedula(),
-                        certificado.getIdCurso(),
-                        certificado.getTitulo(),
-                        certificado.getDescripcion(),
-                        certificado.getFechaEmision(),
-                        certificado.getUidCertificado()
-                ))
+                .map(rel -> {
+                    CertificadosEntity cert = certificadosRepository.findById(rel.getIdCertificado())
+                            .orElseThrow(() -> new RuntimeException("Certificado no encontrado"));
+                    return new CertificadoResponseDTO(
+                            cert.getIdCertificado(),
+                            usuario.getIdUsuario(),
+                            nombreCompleto,
+                            usuario.getCedula(),
+                            cert.getIdCurso(),
+                            cert.getTitulo(),
+                            cert.getDescripcion(),
+                            rel.getFechaEmision(),
+                            rel.getUidCertificado()
+                    );
+                })
                 .collect(Collectors.toList());
     }
 
     public CertificadoResponseDTO getCertificadoByUid(String uidCertificado) {
-        CertificadosEntity certificado = certificadosRepository.findByUidCertificado(uidCertificado)
+        UsuarioCertificadoEntity rel = usuarioCertificadoRepository.findByUidCertificado(uidCertificado)
                 .orElseThrow(() -> new RuntimeException("Certificado no encontrado con UID: " + uidCertificado));
 
-        UserEntity usuario = userRepository.findById(certificado.getIdUsuario())
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + certificado.getIdUsuario()));
+        UserEntity usuario = userRepository.findById(rel.getIdUsuario())
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + rel.getIdUsuario()));
+
+        CertificadosEntity cert = certificadosRepository.findById(rel.getIdCertificado())
+                .orElseThrow(() -> new RuntimeException("Certificado no encontrado"));
 
         return new CertificadoResponseDTO(
-                certificado.getIdCertificado(),
+                cert.getIdCertificado(),
                 usuario.getIdUsuario(),
                 construirNombreCompleto(usuario),
                 usuario.getCedula(),
-                certificado.getIdCurso(),
-                certificado.getTitulo(),
-                certificado.getDescripcion(),
-                certificado.getFechaEmision(),
-                certificado.getUidCertificado()
+                cert.getIdCurso(),
+                cert.getTitulo(),
+                cert.getDescripcion(),
+                rel.getFechaEmision(),
+                rel.getUidCertificado()
         );
+    }
+
+    public boolean existeCertificado(Integer idUsuario, Integer idCurso) {
+        return certificadosRepository.findByIdCurso(idCurso)
+                .map(cert -> usuarioCertificadoRepository.existsByIdUsuarioAndIdCertificado(idUsuario, cert.getIdCertificado()))
+                .orElse(false);
     }
 
     private String construirNombreCompleto(UserEntity usuario) {
@@ -125,9 +152,8 @@ public class CertificadoService {
                     hex.substring(16, 20),
                     hex.substring(20, 32)
             );
-
         } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Error al calcular el algoritmo SHA-256 para el certificado", e);
+            throw new RuntimeException("Error al generar UID del certificado", e);
         }
     }
 }

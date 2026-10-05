@@ -1,7 +1,6 @@
 package com.tesis.urbe.certificados.entity;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "certificados")
@@ -12,9 +11,6 @@ public class CertificadosEntity {
     @Column(name = "idcertificado")
     private Integer idCertificado;
 
-    @Column(name = "idusuario", nullable = false)
-    private Integer idUsuario;
-
     @Column(name = "idcurso", nullable = false)
     private Integer idCurso;
 
@@ -24,20 +20,12 @@ public class CertificadosEntity {
     @Column(name = "descripcion")
     private String descripcion;
 
-    @Column(name = "fechaemision", insertable = false, updatable = false)
-    private LocalDateTime fechaEmision;
-
-    @Column(name = "\"uidCertificado\"", unique = true)
-    private String uidCertificado;
-
     public CertificadosEntity() {}
 
-    public CertificadosEntity(Integer idUsuario, Integer idCurso, String titulo, String descripcion, String uidCertificado) {
-        this.idUsuario = idUsuario;
+    public CertificadosEntity(Integer idCurso, String titulo, String descripcion) {
         this.idCurso = idCurso;
         this.titulo = titulo;
         this.descripcion = descripcion;
-        this.uidCertificado = uidCertificado;
     }
 
     public Integer getIdCertificado() {
@@ -46,14 +34,6 @@ public class CertificadosEntity {
 
     public void setIdCertificado(Integer idCertificado) {
         this.idCertificado = idCertificado;
-    }
-
-    public Integer getIdUsuario() {
-        return idUsuario;
-    }
-
-    public void setIdUsuario(Integer idUsuario) {
-        this.idUsuario = idUsuario;
     }
 
     public Integer getIdCurso() {
@@ -78,21 +58,5 @@ public class CertificadosEntity {
 
     public void setDescripcion(String descripcion) {
         this.descripcion = descripcion;
-    }
-
-    public LocalDateTime getFechaEmision() {
-        return fechaEmision;
-    }
-
-    public void setFechaEmision(LocalDateTime fechaEmision) {
-        this.fechaEmision = fechaEmision;
-    }
-
-    public String getUidCertificado() {
-        return uidCertificado;
-    }
-
-    public void setUidCertificado(String uidCertificado) {
-        this.uidCertificado = uidCertificado;
     }
 }

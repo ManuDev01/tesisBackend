@@ -31,6 +31,14 @@ public class CertificadoController {
         return ResponseEntity.ok(certificados);
     }
 
+    @GetMapping("/existe")
+    public ResponseEntity<Boolean> existeCertificado(
+            @RequestParam Integer idUsuario,
+            @RequestParam Integer idCurso) {
+        boolean existe = certificadoService.existeCertificado(idUsuario, idCurso);
+        return ResponseEntity.ok(existe);
+    }
+
     @GetMapping("/getCertificadoByUid/{uidCertificado}")
     public ResponseEntity<CertificadoResponseDTO> getCertificadoByUid(@PathVariable String uidCertificado) {
         CertificadoResponseDTO respuesta = certificadoService.getCertificadoByUid(uidCertificado);
