@@ -2,6 +2,8 @@ package com.tesis.urbe.leccion.repository;
 
 import com.tesis.urbe.leccion.entity.UsuarioEnLeccionEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -14,4 +16,7 @@ public interface UsuarioEnLeccionRepository extends JpaRepository<UsuarioEnLecci
 
     // Método para consultar todas las lecciones completadas de un usuario
     List<UsuarioEnLeccionEntity> findByIdUsuario(Integer idUsuario);
+
+    @Query("SELECT ul.idLeccion FROM UsuarioEnLeccionEntity ul WHERE ul.idUsuario = :idUsuario")
+    List<Integer> findIdsLeccionesCompletadasByUsuario(@Param("idUsuario") Integer idUsuario);
 }

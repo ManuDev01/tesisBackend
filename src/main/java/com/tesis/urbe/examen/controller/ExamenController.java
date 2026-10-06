@@ -1,11 +1,13 @@
 package com.tesis.urbe.examen.controller;
 
+import com.tesis.urbe.examen.dto.ExamenAntesDeSeccionDTO;
 import com.tesis.urbe.examen.dto.ExamenDTO;
 import com.tesis.urbe.examen.dto.PreguntaExamenDTO;
 import com.tesis.urbe.examen.entity.UsuarioEnExamenEntity;
 import com.tesis.urbe.examen.service.ExamenService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.tesis.urbe.examen.service.ExamenEstadisticaService;
 
 import java.util.List;
 
@@ -14,9 +16,11 @@ import java.util.List;
 public class ExamenController {
 
     private final ExamenService examenService;
+    private final ExamenEstadisticaService examenEstadisticaService;
 
-    public ExamenController(ExamenService examenService) {
+    public ExamenController(ExamenService examenService, ExamenEstadisticaService examenEstadisticaService) {
         this.examenService = examenService;
+        this.examenEstadisticaService = examenEstadisticaService;
     }
 
     @GetMapping("/getExamenByIdSeccion/{idSeccion}")
@@ -41,5 +45,10 @@ public class ExamenController {
     public ResponseEntity<Void> completarExamen(@PathVariable Integer idExamen, @PathVariable Integer idUsuario) {
         examenService.completarExamen(idExamen, idUsuario);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/usuarios-examen-incompleto")
+    public ResponseEntity<List<ExamenAntesDeSeccionDTO>> getUsuariosExamenIncompleto() {
+        return ResponseEntity.ok(examenEstadisticaService.getUsuariosExamenAntesDeCompletarSeccion());
     }
 }
