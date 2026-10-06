@@ -1,6 +1,7 @@
 package com.tesis.urbe.certificados.controller;
 
 import com.tesis.urbe.certificados.dto.CertificadoResponseDTO;
+import com.tesis.urbe.certificados.dto.ConstanciasPorNivelDTO;
 import com.tesis.urbe.certificados.dto.GuardarCertificadoDTO;
 import com.tesis.urbe.certificados.service.CertificadoService;
 import org.springframework.http.HttpStatus;
@@ -42,6 +43,12 @@ public class CertificadoController {
     @GetMapping("/getCertificadoByUid/{uidCertificado}")
     public ResponseEntity<CertificadoResponseDTO> getCertificadoByUid(@PathVariable String uidCertificado) {
         CertificadoResponseDTO respuesta = certificadoService.getCertificadoByUid(uidCertificado);
+        return ResponseEntity.ok(respuesta);
+    }
+
+    @GetMapping("/constancias-por-nivel")
+    public ResponseEntity<List<ConstanciasPorNivelDTO>> getConstanciasPorNivel() {
+        List<ConstanciasPorNivelDTO> respuesta = certificadoService.getConstanciasPorNivel();
         return ResponseEntity.ok(respuesta);
     }
 }

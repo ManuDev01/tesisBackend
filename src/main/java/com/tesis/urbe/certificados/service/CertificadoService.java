@@ -1,6 +1,7 @@
 package com.tesis.urbe.certificados.service;
 
 import com.tesis.urbe.certificados.dto.CertificadoResponseDTO;
+import com.tesis.urbe.certificados.dto.ConstanciasPorNivelDTO;
 import com.tesis.urbe.certificados.dto.GuardarCertificadoDTO;
 import com.tesis.urbe.certificados.entity.CertificadosEntity;
 import com.tesis.urbe.certificados.entity.UsuarioCertificadoEntity;
@@ -14,7 +15,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -155,5 +158,52 @@ public class CertificadoService {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("Error al generar UID del certificado", e);
         }
+    }
+
+    public List<ConstanciasPorNivelDTO> getConstanciasPorNivel() {
+        // Niveles base requeridos
+        List<String> nivelesDefecto = List.of("Principiante", "Intermedio", "Avanzado");
+
+        // Obtener la relación de usuarios con certificados
+        List<UsuarioCertificadoEntity> todosLosCertificados = usuarioCertificadoRepository.findAll();
+
+        Map<String, List<ConstanciasPorNivelDTO.UsuarioConstanciaDTO>> agrupadoPorNivel = nivelesDefecto.stream()
+                .collect(Collectors.toMap(nivel -> nivel, nivel -> new ArrayList<>()));
+
+        for (UsuarioCertificadoEntity uc : todosLosCertificados) {
+            CertificadosEntity cert = certificadosRepository.findById(uc.getIdCertificado()).orElse(null);
+            if (cert == null) continue;
+
+            UserEntity usuario = userRepository.findById(uc.getIdUsuario()).orElse(null);
+            if (usuario == null) continue;
+
+            String nivel = determinarNivelPorTituloODescripcion(cert.getTitulo());
+            String nombreCompleto = construirNombreCompleto(usuario);
+
+            if (agrupadoPorNivel.containsKey(nivel)) {
+                agrupadoPorNivel.get(nivel).add(
+                        new ConstanciasPorNivelDTO.UsuarioConstanciaDTO(usuario.getIdUsuario(), nombreCompleto)
+                );
+            }
+        }
+
+        return nivelesDefecto.stream()
+                .map(nivel -> {
+                    List<ConstanciasPorNivelDTO.UsuarioConstanciaDTO> usuarios = agrupadoPorNivel.get(nivel);
+                    return new ConstanciasPorNivelDTO(
+                            nivel,
+                            (long) usuarios.size(),
+                            usuarios
+                    );
+                })
+                .collect(Collectors.toList());
+    }
+
+    private String determinarNivelPorTituloODescripcion(String titulo) {
+        if (titulo == null) return "Principiante";
+        String t = titulo.toLowerCase();
+        if (t.contains("avanzado")) return "Avanzado";
+        if (t.contains("intermedio")) return "Intermedio";
+        return "Principiante";
     }
 }
