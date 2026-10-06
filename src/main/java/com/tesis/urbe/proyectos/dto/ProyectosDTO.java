@@ -10,7 +10,6 @@ public record ProyectosDTO(
         String codigo,
         String estado,
         Integer puntosProyectos,
-        Integer idCasoDeUso,
         LocalDate createdAt,
         boolean completado,
         String dificultad
@@ -25,7 +24,6 @@ public record ProyectosDTO(
                 entity.getCodigo(),
                 entity.getEstado(),
                 entity.getPuntosProyectos(),
-                entity.getCasoDeUso() != null ? entity.getCasoDeUso().getIdCasoDeUso() : null,
                 entity.getCreatedAt() != null ? entity.getCreatedAt().toLocalDate() : null,
                 completado,
                 entity.getDificultad()

@@ -47,6 +47,12 @@ public class ProyectosService {
                 .collect(Collectors.toList());
     }
 
+    public ProyectosDTO getProyectoById(Integer idProyecto) {
+        return proyectosRepository.findById(idProyecto)
+                .map(proyecto -> ProyectosDTO.fromEntity(proyecto, false))
+                .orElse(null);
+    }
+
     public List<ProyectosDTO> getProyectosLibresByUsuario(Integer idUsuario) {
         Set<Integer> proyectosCompletadosIds = usuarioConProyectoRepository.findByIdUsuario(idUsuario)
                 .stream()

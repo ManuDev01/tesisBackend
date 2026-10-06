@@ -28,6 +28,15 @@ public class ProyectosController {
         return ResponseEntity.ok(proyectos);
     }
 
+    @GetMapping("/getProyectoById/{idProyecto}")
+    public ResponseEntity<ProyectosDTO> getProyectoById(@PathVariable Integer idProyecto) {
+        ProyectosDTO proyecto = proyectosService.getProyectoById(idProyecto);
+        if (proyecto == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(proyecto);
+    }
+
     @GetMapping("/getProyectosLibres/{idUsuario}")
     public ResponseEntity<List<ProyectosDTO>> getProyectosLibres(@PathVariable Integer idUsuario) {
         List<ProyectosDTO> proyectosLibres = proyectosService.getProyectosLibresByUsuario(idUsuario);

@@ -1,6 +1,5 @@
 package com.tesis.urbe.proyectos.entity;
 
-import com.tesis.urbe.casosDeUso.entity.CasosDeUsoEntity;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -29,11 +28,7 @@ public class ProyectosEntity {
     private Integer puntosProyectos;
 
     @Column(name = "dificultad")
-    private String dificultad; // "FACIL", "MEDIO", "DIFICIL"
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "idcasodeuso", referencedColumnName = "idcasodeuso")
-    private CasosDeUsoEntity casoDeUso;
+    private String dificultad;
 
     @Column(name = "createdat", insertable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -94,14 +89,6 @@ public class ProyectosEntity {
 
     public void setDificultad(String dificultad) {
         this.dificultad = dificultad;
-    }
-
-    public CasosDeUsoEntity getCasoDeUso() {
-        return casoDeUso;
-    }
-
-    public void setCasoDeUso(CasosDeUsoEntity casoDeUso) {
-        this.casoDeUso = casoDeUso;
     }
 
     public LocalDateTime getCreatedAt() {

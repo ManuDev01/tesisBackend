@@ -8,6 +8,6 @@ import java.util.List;
 
 @Repository
 public interface CasosDeUsoRepository extends JpaRepository<CasosDeUsoEntity, Integer> {
-    // Retorna la lista de todos los casos de uso del proyecto
+
     List<CasosDeUsoEntity> findByIdProyecto_IdProyecto(Integer idProyecto);
 }

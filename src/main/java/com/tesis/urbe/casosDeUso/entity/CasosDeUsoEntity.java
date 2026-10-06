@@ -12,8 +12,8 @@ public class CasosDeUsoEntity {
     @Column(name = "idcasodeuso")
     private Integer idCasoDeUso;
 
-    @OneToOne
-    @JoinColumn(name = "idproyecto", referencedColumnName = "idproyecto")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "idproyecto")
     private ProyectosEntity idProyecto;
 
     @Column(name = "entrada")
@@ -26,14 +26,6 @@ public class CasosDeUsoEntity {
     private Boolean esOculto;
 
     public CasosDeUsoEntity() {}
-
-    public CasosDeUsoEntity(Integer idCasoDeUso, ProyectosEntity idProyecto, String entrada, String salidaEsperada, Boolean esOculto) {
-        this.idCasoDeUso = idCasoDeUso;
-        this.idProyecto = idProyecto;
-        this.entrada = entrada;
-        this.salidaEsperada = salidaEsperada;
-        this.esOculto = esOculto;
-    }
 
     public Integer getIdCasoDeUso() {
         return idCasoDeUso;
