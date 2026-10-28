@@ -52,11 +52,11 @@ public class UserController {
     return ResponseEntity.ok(savedUser);
   }
 
-  @PutMapping("/updateUser")
-  public ResponseEntity<UpdateUserDTO> updateUser(@RequestBody UpdateUserDTO updateUserDTO) {
-    UpdateUserDTO updateUser = userService.updateUser(updateUserDTO);
-    return ResponseEntity.ok(updateUser);
-  }
+@PutMapping("/updateUser")
+public ResponseEntity<UpdateUserDTO> updateUser(@RequestBody UpdateUserDTO updateUserDTO) {
+    UpdateUserDTO updatedUser = userService.updateUser(updateUserDTO);
+    return ResponseEntity.ok(updatedUser);
+}
 
   @DeleteMapping("/deleteUser")
   public ResponseEntity<DeleteUserDTO> deleteUser(@RequestBody DeleteUserDTO deleteUserDTO) {

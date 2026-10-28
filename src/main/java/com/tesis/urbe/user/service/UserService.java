@@ -98,20 +98,21 @@ public class UserService {
     }
 
     public UpdateUserDTO updateUser(UpdateUserDTO updateUserDTO) {
-        UserEntity usuario = userRepository.findById(updateUserDTO.idUsuario()).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+    UserEntity usuario = userRepository.findById(updateUserDTO.idUsuario())
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado con el ID: " + updateUserDTO.idUsuario()));
 
-        usuario.setPrimerNombre(updateUserDTO.primerNombre());
-        usuario.setSegundoNombre(updateUserDTO.segundoNombre());
-        usuario.setPrimerApellido(updateUserDTO.primerApellido());
-        usuario.setSegundoApellido(updateUserDTO.segundoApellido());
-        usuario.setNombreUsuario(updateUserDTO.nombreUsuario());
-        usuario.setCedula(updateUserDTO.cedula());
-        usuario.setCorreo(updateUserDTO.correo());
+    usuario.setPrimerNombre(updateUserDTO.primerNombre());
+    usuario.setSegundoNombre(updateUserDTO.segundoNombre());
+    usuario.setPrimerApellido(updateUserDTO.primerApellido());
+    usuario.setSegundoApellido(updateUserDTO.segundoApellido());
+    usuario.setNombreUsuario(updateUserDTO.nombreUsuario());
+    usuario.setCedula(updateUserDTO.cedula());
+    usuario.setCorreo(updateUserDTO.correo());
 
-        UserEntity usuarioActualizado = userRepository.save(usuario);
+    UserEntity usuarioActualizado = userRepository.save(usuario);
 
-        return UpdateUserDTO.fromEntity(usuarioActualizado);
-    }
+    return UpdateUserDTO.fromEntity(usuarioActualizado);
+}
 
     public DeleteUserDTO deleteUser(DeleteUserDTO deleteUserDTO) {
         UserEntity usuario = userRepository.findById(deleteUserDTO.idUsuario()).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
