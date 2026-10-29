@@ -21,8 +21,7 @@ public class ProyectosController {
     public ProyectosController(ProyectosService proyectosService) {
         this.proyectosService = proyectosService;
     }
-
-    @GetMapping("/getProyectos")
+   @GetMapping("/getProyectos")
     public ResponseEntity<List<ProyectosDTO>> getProyectos() {
         List<ProyectosDTO> proyectos = proyectosService.getProyectos();
         return ResponseEntity.ok(proyectos);
