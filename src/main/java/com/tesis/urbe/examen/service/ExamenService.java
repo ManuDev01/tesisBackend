@@ -7,6 +7,8 @@ import com.tesis.urbe.examen.entity.UsuarioEnExamenEntity;
 import com.tesis.urbe.examen.repository.ExamenRepository;
 import com.tesis.urbe.examen.repository.PreguntaExamenRepository;
 import com.tesis.urbe.examen.repository.UsuarioEnExamenRepository;
+import com.tesis.urbe.medallas.dto.MedallaDTO;
+import com.tesis.urbe.medallas.service.LogroService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,11 +20,13 @@ public class ExamenService {
     private final ExamenRepository examenRepository;
     private final PreguntaExamenRepository preguntaExamenRepository;
     private final UsuarioEnExamenRepository usuarioEnExamenRepository;
+    private final LogroService logroService;
 
-    public ExamenService(ExamenRepository examenRepository, PreguntaExamenRepository preguntaExamenRepository, UsuarioEnExamenRepository usuarioEnExamenRepository) {
+    public ExamenService(ExamenRepository examenRepository, PreguntaExamenRepository preguntaExamenRepository, UsuarioEnExamenRepository usuarioEnExamenRepository, LogroService logroService) {
         this.examenRepository = examenRepository;
         this.preguntaExamenRepository = preguntaExamenRepository;
         this.usuarioEnExamenRepository = usuarioEnExamenRepository;
+        this.logroService = logroService;
     }
 
     public ExamenDTO getExamenByIdSeccion(Integer idSeccion) {
@@ -58,7 +62,7 @@ public class ExamenService {
                 .collect(Collectors.toList());
     }
 
-    public void completarExamen(Integer idExamen, Integer idUsuario) {
+    public List<MedallaDTO> completarExamen(Integer idExamen, Integer idUsuario, boolean sinFallos) {
         // Validar si ya existe el registro para no duplicar
         boolean yaCompletado = usuarioEnExamenRepository.existsByIdUsuarioAndIdExamen(idUsuario, idExamen);
 
@@ -68,6 +72,10 @@ public class ExamenService {
             registro.setIdUsuario(idUsuario);
             usuarioEnExamenRepository.save(registro);
         }
+
+        // Se verifica siempre para permitir, por ejemplo, desbloquear la
+        // medalla de examen perfecto en un reintento posterior.
+        return logroService.onExamenCompletado(idUsuario, idExamen, sinFallos);
     }
 
     public List<UsuarioEnExamenEntity> getExamenesByUsuario(Integer idUsuario) {

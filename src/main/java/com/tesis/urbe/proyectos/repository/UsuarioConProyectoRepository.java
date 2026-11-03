@@ -9,4 +9,6 @@ public interface UsuarioConProyectoRepository extends ListCrudRepository<Usuario
 
     // Este es el método que te faltaba definir:
     List<UsuarioConProyectosEntity> findByIdUsuario(Integer idUsuario);
+
+    boolean existsByIdUsuarioAndIdProyecto(Integer idUsuario, Integer idProyecto);
 }

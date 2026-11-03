@@ -4,6 +4,8 @@ import com.tesis.urbe.proyectos.dto.ProyectoCursoDTO;
 import com.tesis.urbe.proyectos.dto.ProyectoDetalleDTO;
 import com.tesis.urbe.proyectos.dto.ProyectosDTO;
 import com.tesis.urbe.proyectos.dto.UsuarioProyectosRankingDTO;
+import com.tesis.urbe.medallas.dto.MedallaDTO;
+import com.tesis.urbe.medallas.service.LogroService;
 import com.tesis.urbe.proyectos.entity.ProyectoCursoEntity;
 import com.tesis.urbe.proyectos.entity.UsuarioConProyectosEntity;
 import com.tesis.urbe.proyectos.entity.UsuarioEnProyectoCursoEntity;
@@ -27,17 +29,20 @@ public class ProyectosService {
     private final ProyectoCursoRepository proyectoCursoRepository;
     private final UsuarioEnProyectoCursoRepository usuarioEnProyectoCursoRepository;
     private final UserRepository userRepository;
+    private final LogroService logroService;
 
     public ProyectosService(ProyectosRepository proyectosRepository,
                             UsuarioConProyectoRepository usuarioConProyectoRepository,
                             ProyectoCursoRepository proyectoCursoRepository,
                             UsuarioEnProyectoCursoRepository usuarioEnProyectoCursoRepository,
-                            UserRepository userRepository) {
+                            UserRepository userRepository,
+                            LogroService logroService) {
         this.proyectosRepository = proyectosRepository;
         this.usuarioConProyectoRepository = usuarioConProyectoRepository;
         this.proyectoCursoRepository = proyectoCursoRepository;
         this.usuarioEnProyectoCursoRepository = usuarioEnProyectoCursoRepository;
         this.userRepository = userRepository;
+        this.logroService = logroService;
     }
 
     public List<ProyectosDTO> getProyectos() {
@@ -87,16 +92,20 @@ public class ProyectosService {
                 .collect(Collectors.toList());
     }
 
-    public void saveUsuarioConProyectoCurso(Integer idUsuario, Integer idProyectoCurso) {
+    public List<MedallaDTO> saveUsuarioConProyectoCurso(Integer idUsuario, Integer idProyectoCurso) {
         if (!isProyectoCursoCompletado(idUsuario, idProyectoCurso)) {
             UsuarioEnProyectoCursoEntity entity = new UsuarioEnProyectoCursoEntity(idUsuario, idProyectoCurso);
             usuarioEnProyectoCursoRepository.save(entity);
         }
+        return logroService.onProyectoCompletado(idUsuario, idProyectoCurso, true);
     }
 
-    public void saveUsuarioConProyecto(Integer idUsuario, Integer idProyecto) {
-        UsuarioConProyectosEntity entity = new UsuarioConProyectosEntity(idUsuario, idProyecto);
-        usuarioConProyectoRepository.save(entity);
+    public List<MedallaDTO> saveUsuarioConProyecto(Integer idUsuario, Integer idProyecto) {
+        if (!usuarioConProyectoRepository.existsByIdUsuarioAndIdProyecto(idUsuario, idProyecto)) {
+            UsuarioConProyectosEntity entity = new UsuarioConProyectosEntity(idUsuario, idProyecto);
+            usuarioConProyectoRepository.save(entity);
+        }
+        return logroService.onProyectoCompletado(idUsuario, idProyecto, false);
     }
 
     public List<UsuarioProyectosRankingDTO> getRankingProyectosPorUsuario() {

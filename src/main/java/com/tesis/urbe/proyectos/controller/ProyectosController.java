@@ -4,6 +4,7 @@ import com.tesis.urbe.proyectos.dto.ProyectoCursoDTO;
 import com.tesis.urbe.proyectos.dto.ProyectosDTO;
 import com.tesis.urbe.proyectos.dto.UsuarioProyectosRankingDTO;
 import com.tesis.urbe.proyectos.service.ProyectosService;
+import com.tesis.urbe.medallas.dto.MedallaDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -64,14 +65,12 @@ public class ProyectosController {
     }
 
     @PostMapping("/completarProyecto/{idUsuario}/{idProyecto}")
-    public ResponseEntity<Void> postUsuarioConProyecto(@PathVariable Integer idUsuario, @PathVariable Integer idProyecto) {
-        this.proyectosService.saveUsuarioConProyecto(idUsuario, idProyecto);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<List<MedallaDTO>> postUsuarioConProyecto(@PathVariable Integer idUsuario, @PathVariable Integer idProyecto) {
+        return ResponseEntity.ok(proyectosService.saveUsuarioConProyecto(idUsuario, idProyecto));
     }
 
     @PostMapping("/completarProyectoCurso/{idUsuario}/{idProyectoCurso}")
-    public ResponseEntity<Void> postUsuarioConProyectoCurso(@PathVariable Integer idUsuario, @PathVariable Integer idProyectoCurso) {
-        this.proyectosService.saveUsuarioConProyectoCurso(idUsuario, idProyectoCurso);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<List<MedallaDTO>> postUsuarioConProyectoCurso(@PathVariable Integer idUsuario, @PathVariable Integer idProyectoCurso) {
+        return ResponseEntity.ok(proyectosService.saveUsuarioConProyectoCurso(idUsuario, idProyectoCurso));
     }
 }

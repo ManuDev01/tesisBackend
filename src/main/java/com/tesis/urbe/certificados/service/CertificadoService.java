@@ -7,6 +7,7 @@ import com.tesis.urbe.certificados.entity.CertificadosEntity;
 import com.tesis.urbe.certificados.entity.UsuarioCertificadoEntity;
 import com.tesis.urbe.certificados.repository.CertificadosRepository;
 import com.tesis.urbe.certificados.repository.UsuarioCertificadoRepository;
+import com.tesis.urbe.medallas.service.LogroService;
 import com.tesis.urbe.user.entity.UserEntity;
 import com.tesis.urbe.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -26,14 +27,17 @@ public class CertificadoService {
     private final CertificadosRepository certificadosRepository;
     private final UsuarioCertificadoRepository usuarioCertificadoRepository;
     private final UserRepository userRepository;
+    private final LogroService logroService;
 
     public CertificadoService(
             CertificadosRepository certificadosRepository,
             UsuarioCertificadoRepository usuarioCertificadoRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            LogroService logroService) {
         this.certificadosRepository = certificadosRepository;
         this.usuarioCertificadoRepository = usuarioCertificadoRepository;
         this.userRepository = userRepository;
+        this.logroService = logroService;
     }
 
     @Transactional
@@ -57,6 +61,9 @@ public class CertificadoService {
         );
 
         UsuarioCertificadoEntity guardado = usuarioCertificadoRepository.save(relacion);
+
+        // Un certificado implica que el curso se completó: verificamos sus medallas.
+        logroService.onCertificadoEmitido(usuario.getIdUsuario(), certificado.getIdCurso());
 
         return new CertificadoResponseDTO(
                 certificado.getIdCertificado(),

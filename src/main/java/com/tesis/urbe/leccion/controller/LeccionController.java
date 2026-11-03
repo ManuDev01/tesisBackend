@@ -3,6 +3,7 @@ package com.tesis.urbe.leccion.controller;
 import com.tesis.urbe.leccion.dto.*;
 import com.tesis.urbe.leccion.service.LeccionEstadisticaService;
 import com.tesis.urbe.leccion.service.LeccionService;
+import com.tesis.urbe.medallas.dto.MedallaDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -39,9 +40,8 @@ public class LeccionController {
     }
 
     @PatchMapping("/completeLeccion/{idLeccion}/user/{idUsuario}")
-    public ResponseEntity<Void> completeLeccion(@PathVariable Integer idLeccion, @PathVariable Integer idUsuario) {
-        leccionService.completarLeccion(idLeccion, idUsuario);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<List<MedallaDTO>> completeLeccion(@PathVariable Integer idLeccion, @PathVariable Integer idUsuario) {
+        return ResponseEntity.ok(leccionService.completarLeccion(idLeccion, idUsuario));
     }
 
     @GetMapping("/completadas-por-usuario")

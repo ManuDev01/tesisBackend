@@ -5,6 +5,8 @@ import com.tesis.urbe.leccion.dto.UsuarioLeccionesCompletadasDTO;
 import com.tesis.urbe.leccion.entity.UsuarioEnLeccionEntity;
 import com.tesis.urbe.leccion.repository.LeccionRepository;
 import com.tesis.urbe.leccion.repository.UsuarioEnLeccionRepository;
+import com.tesis.urbe.medallas.dto.MedallaDTO;
+import com.tesis.urbe.medallas.service.LogroService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,10 +20,14 @@ public class LeccionService {
 
     private final LeccionRepository leccionRepository;
     private final UsuarioEnLeccionRepository usuarioEnLeccionRepository;
+    private final LogroService logroService;
 
-    public LeccionService(LeccionRepository leccionRepository, UsuarioEnLeccionRepository usuarioEnLeccionRepository) {
+    public LeccionService(LeccionRepository leccionRepository,
+                          UsuarioEnLeccionRepository usuarioEnLeccionRepository,
+                          LogroService logroService) {
         this.leccionRepository = leccionRepository;
         this.usuarioEnLeccionRepository = usuarioEnLeccionRepository;
+        this.logroService = logroService;
     }
 
     public List<LeccionDTO> getAllLeccions() {
@@ -55,13 +61,17 @@ public class LeccionService {
                 .collect(Collectors.toList());
     }
 
-    public void completarLeccion(Integer idLeccion, Integer idUsuario) {
+    public List<MedallaDTO> completarLeccion(Integer idLeccion, Integer idUsuario) {
         boolean yaCompletada = usuarioEnLeccionRepository.existsByIdLeccionAndIdUsuario(idLeccion, idUsuario);
 
         if (!yaCompletada) {
             UsuarioEnLeccionEntity nuevaRelacion = new UsuarioEnLeccionEntity(idLeccion, idUsuario);
             usuarioEnLeccionRepository.save(nuevaRelacion);
         }
+
+        // Se verifica siempre: así una segunda llamada (o un reintento del
+        // frontend) también puede desbloquear medallas pendientes.
+        return logroService.onLeccionCompletada(idUsuario, idLeccion);
     }
 
     @Transactional(readOnly = true)

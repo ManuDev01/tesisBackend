@@ -10,6 +10,8 @@ import java.util.List;
 @Repository
 public interface IntentoLeccionRepository extends JpaRepository<IntentoLeccionEntity, Integer> {
 
+    List<IntentoLeccionEntity> findByIdUsuario(Integer idUsuario);
+
     @Query(value = """
         SELECT 
             l.idleccion AS idLeccion,

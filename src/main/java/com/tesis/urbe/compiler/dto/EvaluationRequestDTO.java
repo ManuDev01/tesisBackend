@@ -6,5 +6,6 @@ public record EvaluationRequestDTO(
         Integer idPreguntaExamen,
         String codigo,
         String entrada,       // 👈 Campo para recibir el texto del usuario
-        String tipoProyecto
+        String tipoProyecto,
+        Integer idUsuario     // 👈 Usuario que compila (para las medallas)
 ) {}

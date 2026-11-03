@@ -5,6 +5,7 @@ import com.tesis.urbe.examen.dto.ExamenDTO;
 import com.tesis.urbe.examen.dto.PreguntaExamenDTO;
 import com.tesis.urbe.examen.entity.UsuarioEnExamenEntity;
 import com.tesis.urbe.examen.service.ExamenService;
+import com.tesis.urbe.medallas.dto.MedallaDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.tesis.urbe.examen.service.ExamenEstadisticaService;
@@ -42,9 +43,11 @@ public class ExamenController {
     }
 
     @PostMapping("/completarExamen/{idExamen}/user/{idUsuario}")
-    public ResponseEntity<Void> completarExamen(@PathVariable Integer idExamen, @PathVariable Integer idUsuario) {
-        examenService.completarExamen(idExamen, idUsuario);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<List<MedallaDTO>> completarExamen(
+            @PathVariable Integer idExamen,
+            @PathVariable Integer idUsuario,
+            @RequestParam(defaultValue = "false") boolean sinFallos) {
+        return ResponseEntity.ok(examenService.completarExamen(idExamen, idUsuario, sinFallos));
     }
 
     @GetMapping("/usuarios-examen-incompleto")

@@ -9,6 +9,8 @@ import java.util.List;
 public interface UsuarioConMedallaRepository extends ListCrudRepository<UsuarioConMedallaEntity, Integer> {
     List<UsuarioConMedallaEntity> findByIdUsuario(Integer idUsuario);
 
+    boolean existsByIdUsuarioAndIdMedalla(Integer idUsuario, Integer idMedalla);
+
     @Query("SELECT new com.tesis.urbe.medallas.dto.UsuarioMedallaCountDTO(" +
             "u.idUsuario, " +
             "CONCAT(u.primerNombre, ' ', u.primerApellido), " +
