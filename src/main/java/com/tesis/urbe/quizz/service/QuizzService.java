@@ -1,5 +1,6 @@
 package com.tesis.urbe.quizz.service;
 
+<<<<<<< HEAD
 import com.tesis.urbe.leccion.entity.IntentoLeccionEntity;
 import com.tesis.urbe.leccion.entity.LeccionEntity;
 import com.tesis.urbe.leccion.repository.IntentoLeccionRepository;
@@ -17,16 +18,32 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+=======
+>>>>>>> ccaeecbcb4756d06987af5f4d59fad9970223af0
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
+
+import com.tesis.urbe.quizz.dto.FalloUsuarioQuizzDTO;
+import com.tesis.urbe.quizz.dto.QuizzDTO;
+import com.tesis.urbe.quizz.dto.QuizzFalloDashboardDTO;
+import com.tesis.urbe.quizz.entity.FalloUsuarioQuizzEntity;
+import com.tesis.urbe.quizz.entity.QuizzEntity;
+import com.tesis.urbe.quizz.repository.FalloUsuarioQuizzRepository;
+import com.tesis.urbe.quizz.repository.QuizzRepository;
+import com.tesis.urbe.user.entity.UserEntity;
+import com.tesis.urbe.user.repository.UserRepository;
+
 @Service
 public class QuizzService {
 
     private final QuizzRepository quizzRepository;
+<<<<<<< HEAD
     private final IntentoLeccionRepository intentoLeccionRepository;
     private final LogroService logroService;
 
@@ -36,6 +53,17 @@ public class QuizzService {
         this.quizzRepository = quizzRepository;
         this.intentoLeccionRepository = intentoLeccionRepository;
         this.logroService = logroService;
+=======
+    private final FalloUsuarioQuizzRepository falloUsuarioQuizzRepository;
+    private final UserRepository userRepository;
+
+    public QuizzService(QuizzRepository quizzRepository, 
+                        FalloUsuarioQuizzRepository falloUsuarioQuizzRepository, 
+                        UserRepository userRepository) {
+        this.quizzRepository = quizzRepository;
+        this.falloUsuarioQuizzRepository = falloUsuarioQuizzRepository;
+        this.userRepository = userRepository;
+>>>>>>> ccaeecbcb4756d06987af5f4d59fad9970223af0
     }
 
     public List<QuizzDTO> getQuizz() {
@@ -52,6 +80,7 @@ public class QuizzService {
                 .collect(Collectors.toList());
     }
 
+<<<<<<< HEAD
     /**
      * Evalúa las respuestas del estudiante contra la respuesta correcta
      * guardada en la base de datos, registra cada intento y dispara las
@@ -159,4 +188,33 @@ public class QuizzService {
         }
         return respuesta.trim().toUpperCase(Locale.ROOT);
     }
+=======
+    // Registrar fallo de quiz
+    public FalloUsuarioQuizzDTO saveFalloUsuarioQuizz(FalloUsuarioQuizzDTO dto) {
+        UserEntity usuario = userRepository.findById(dto.idUsuario())
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + dto.idUsuario()));
+
+        QuizzEntity quizz = quizzRepository.findById(dto.idQuizz())
+                .orElseThrow(() -> new RuntimeException("Quizz no encontrado con ID: " + dto.idQuizz()));
+
+        FalloUsuarioQuizzEntity entidad = new FalloUsuarioQuizzEntity(null, usuario, quizz);
+        FalloUsuarioQuizzEntity guardado = falloUsuarioQuizzRepository.save(entidad);
+
+        return FalloUsuarioQuizzDTO.fromEntity(guardado);
+    }
+
+    // Obtener fallos por usuario
+    public List<FalloUsuarioQuizzDTO> getFalloUsuarioQuizzByIdUsuario(Integer idUsuario) {
+        return falloUsuarioQuizzRepository.findByUsuario_IdUsuario(idUsuario)
+                .stream()
+                .map(FalloUsuarioQuizzDTO::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+// Obtener el quiz con más fallos para el dashboard
+public QuizzFalloDashboardDTO getQuizzConMasFallos() {
+    List<QuizzFalloDashboardDTO> resultado = falloUsuarioQuizzRepository.findQuizzConMasFallos(PageRequest.of(0, 1));
+    return resultado.isEmpty() ? null : resultado.get(0);
+}
+>>>>>>> ccaeecbcb4756d06987af5f4d59fad9970223af0
 }
