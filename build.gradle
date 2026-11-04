@@ -27,6 +27,8 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-websocket-test'
+	// BD en memoria solo para validar el contexto (JPQL e inyecciones) en tests
+	testRuntimeOnly 'com.h2database:h2'
 
 
 	// Launcher de Consola de JUnit Platform (Crucial para ejecutar 'ConsoleLauncher' desde el subproceso)
@@ -56,4 +58,27 @@ bootJar.dependsOn copyDependencies
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+// ── Resolución de JUnit solo para tests ─────────────────────────────────────
+// El compilador en memoria fija JUnit 5.10.2 (implementation), pero los
+// starters de test de Spring Boot 4 gestionan JUnit 6.0.3. Sin esta
+// restricción, el classpath de tests mezcla ambas versiones y SpringExtension
+// falla con NoSuchMethodError. También se excluye el console-standalone, que
+// trae una copia embebida de la plataforma JUnit.
+configurations.configureEach { c ->
+	if (c.name == 'testCompileClasspath' || c.name == 'testRuntimeClasspath') {
+		c.exclude group: 'org.junit.platform', module: 'junit-platform-console-standalone'
+		c.resolutionStrategy.eachDependency { details ->
+			if (details.requested.group in ['org.junit.jupiter', 'org.junit.platform']
+					&& details.requested.name in [
+						'junit-jupiter', 'junit-jupiter-api', 'junit-jupiter-engine',
+						'junit-jupiter-params', 'junit-platform-launcher',
+						'junit-platform-engine', 'junit-platform-commons'
+					]) {
+				details.useVersion '6.0.3'
+				details.because 'Los tests usan JUnit 6 (BOM de Spring Boot 4); el compilador en memoria fija JUnit 5 solo en runtime.'
+			}
+		}
+	}
 }

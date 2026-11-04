@@ -1,0 +1,17 @@
+[[configurations]]
+id = "application:com.tesis.urbe.Application"
+name = "Application"
+kind = "spring-boot"
+command = "java"
+args = ["-cp", "${classpath}", "com.tesis.urbe.Application"]
+module = ""
+debug-adapter = "java-debug"
+params = { classpath = "${classpath}", mainClass = "com.tesis.urbe.Application", programArgs = "", vmOptions = "" }
+
+[[configurations]]
+id = "gradle:bootRun"
+name = "gradle bootRun"
+kind = "gradle"
+command = "gradlew.bat"
+args = ["bootRun"]
+params = { arguments = "", executable = "gradlew.bat", projectDir = "", tasks = "bootRun", wrapper = "true" }

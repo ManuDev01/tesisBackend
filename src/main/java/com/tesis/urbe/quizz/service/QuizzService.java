@@ -1,69 +1,54 @@
 package com.tesis.urbe.quizz.service;
 
-<<<<<<< HEAD
 import com.tesis.urbe.leccion.entity.IntentoLeccionEntity;
 import com.tesis.urbe.leccion.entity.LeccionEntity;
 import com.tesis.urbe.leccion.repository.IntentoLeccionRepository;
 import com.tesis.urbe.medallas.dto.MedallaDTO;
 import com.tesis.urbe.medallas.service.LogroService;
-import com.tesis.urbe.quizz.dto.QuizzDTO;
-import com.tesis.urbe.quizz.dto.QuizzResultadoDTO;
-import com.tesis.urbe.quizz.dto.ResponderQuizzDTO;
-import com.tesis.urbe.quizz.dto.RespuestaQuizzDTO;
-import com.tesis.urbe.quizz.entity.QuizzEntity;
-import com.tesis.urbe.quizz.repository.QuizzRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-=======
->>>>>>> ccaeecbcb4756d06987af5f4d59fad9970223af0
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import org.springframework.data.domain.PageRequest;
-import org.springframework.stereotype.Service;
-
 import com.tesis.urbe.quizz.dto.FalloUsuarioQuizzDTO;
 import com.tesis.urbe.quizz.dto.QuizzDTO;
 import com.tesis.urbe.quizz.dto.QuizzFalloDashboardDTO;
+import com.tesis.urbe.quizz.dto.QuizzResultadoDTO;
+import com.tesis.urbe.quizz.dto.ResponderQuizzDTO;
+import com.tesis.urbe.quizz.dto.RespuestaQuizzDTO;
 import com.tesis.urbe.quizz.entity.FalloUsuarioQuizzEntity;
 import com.tesis.urbe.quizz.entity.QuizzEntity;
 import com.tesis.urbe.quizz.repository.FalloUsuarioQuizzRepository;
 import com.tesis.urbe.quizz.repository.QuizzRepository;
 import com.tesis.urbe.user.entity.UserEntity;
 import com.tesis.urbe.user.repository.UserRepository;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class QuizzService {
 
     private final QuizzRepository quizzRepository;
-<<<<<<< HEAD
     private final IntentoLeccionRepository intentoLeccionRepository;
     private final LogroService logroService;
-
-    public QuizzService(QuizzRepository quizzRepository,
-                        IntentoLeccionRepository intentoLeccionRepository,
-                        LogroService logroService) {
-        this.quizzRepository = quizzRepository;
-        this.intentoLeccionRepository = intentoLeccionRepository;
-        this.logroService = logroService;
-=======
     private final FalloUsuarioQuizzRepository falloUsuarioQuizzRepository;
     private final UserRepository userRepository;
 
-    public QuizzService(QuizzRepository quizzRepository, 
-                        FalloUsuarioQuizzRepository falloUsuarioQuizzRepository, 
+    public QuizzService(QuizzRepository quizzRepository,
+                        IntentoLeccionRepository intentoLeccionRepository,
+                        LogroService logroService,
+                        FalloUsuarioQuizzRepository falloUsuarioQuizzRepository,
                         UserRepository userRepository) {
         this.quizzRepository = quizzRepository;
+        this.intentoLeccionRepository = intentoLeccionRepository;
+        this.logroService = logroService;
         this.falloUsuarioQuizzRepository = falloUsuarioQuizzRepository;
         this.userRepository = userRepository;
->>>>>>> ccaeecbcb4756d06987af5f4d59fad9970223af0
     }
 
     public List<QuizzDTO> getQuizz() {
@@ -80,11 +65,14 @@ public class QuizzService {
                 .collect(Collectors.toList());
     }
 
-<<<<<<< HEAD
     /**
      * Evalúa las respuestas del estudiante contra la respuesta correcta
      * guardada en la base de datos, registra cada intento y dispara las
      * medallas asociadas al quiz.
+     *
+     * <p>Los fallos previos de la lección se calculan <strong>antes</strong> de
+     * persistir esta tanda: la verificación de medallas corre en una transacción
+     * independiente y no vería los registros aún no confirmados.
      */
     @Transactional
     public QuizzResultadoDTO responderQuizz(ResponderQuizzDTO request) {
@@ -107,6 +95,12 @@ public class QuizzService {
         if (idSeccion == null) {
             throw new IllegalStateException("La lección del quiz no tiene una sección asociada");
         }
+
+        // Fallos ya registrados en tandas anteriores de ESTA lección. Se calcula
+        // ANTES de persistir la tanda actual: la verificación de medallas corre en
+        // una transacción independiente y no vería los registros sin confirmar.
+        int fallosPrevios = (int) intentoLeccionRepository
+                .contarFallosDeLeccion(request.idUsuario(), request.idLeccion());
 
         int aciertos = 0;
         int fallos = 0;
@@ -156,7 +150,8 @@ public class QuizzService {
                 request.idLeccion(),
                 preguntas.size(),
                 aciertos,
-                fallos
+                fallos,
+                fallosPrevios
         );
 
         return new QuizzResultadoDTO(
@@ -188,7 +183,7 @@ public class QuizzService {
         }
         return respuesta.trim().toUpperCase(Locale.ROOT);
     }
-=======
+
     // Registrar fallo de quiz
     public FalloUsuarioQuizzDTO saveFalloUsuarioQuizz(FalloUsuarioQuizzDTO dto) {
         UserEntity usuario = userRepository.findById(dto.idUsuario())
@@ -211,10 +206,9 @@ public class QuizzService {
                 .collect(Collectors.toList());
     }
 
-// Obtener el quiz con más fallos para el dashboard
-public QuizzFalloDashboardDTO getQuizzConMasFallos() {
-    List<QuizzFalloDashboardDTO> resultado = falloUsuarioQuizzRepository.findQuizzConMasFallos(PageRequest.of(0, 1));
-    return resultado.isEmpty() ? null : resultado.get(0);
-}
->>>>>>> ccaeecbcb4756d06987af5f4d59fad9970223af0
+    // Obtener el quiz con más fallos para el dashboard
+    public QuizzFalloDashboardDTO getQuizzConMasFallos() {
+        List<QuizzFalloDashboardDTO> resultado = falloUsuarioQuizzRepository.findQuizzConMasFallos(PageRequest.of(0, 1));
+        return resultado.isEmpty() ? null : resultado.get(0);
+    }
 }

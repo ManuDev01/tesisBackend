@@ -27,6 +27,8 @@ import com.tesis.urbe.proyectos.repository.ProyectoCursoRepository;
 import com.tesis.urbe.proyectos.repository.ProyectosRepository;
 import com.tesis.urbe.proyectos.repository.UsuarioConProyectoRepository;
 import com.tesis.urbe.proyectos.repository.UsuarioEnProyectoCursoRepository;
+import com.tesis.urbe.quizz.entity.QuizzEntity;
+import com.tesis.urbe.quizz.repository.QuizzRepository;
 import com.tesis.urbe.seccion.entity.SeccionEntity;
 import com.tesis.urbe.seccion.repository.SeccionRepository;
 import org.slf4j.Logger;
@@ -41,6 +43,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -79,6 +82,7 @@ public class LogroService {
     private final RegistroCompilacionRepository registroCompilacionRepository;
     private final CertificadosRepository certificadosRepository;
     private final UsuarioCertificadoRepository usuarioCertificadoRepository;
+    private final QuizzRepository quizzRepository;
     private final TransactionTemplate transactionTemplate;
 
     public LogroService(
@@ -97,6 +101,7 @@ public class LogroService {
             RegistroCompilacionRepository registroCompilacionRepository,
             CertificadosRepository certificadosRepository,
             UsuarioCertificadoRepository usuarioCertificadoRepository,
+            QuizzRepository quizzRepository,
             PlatformTransactionManager transactionManager) {
         this.medallaService = medallaService;
         this.leccionRepository = leccionRepository;
@@ -113,6 +118,7 @@ public class LogroService {
         this.registroCompilacionRepository = registroCompilacionRepository;
         this.certificadosRepository = certificadosRepository;
         this.usuarioCertificadoRepository = usuarioCertificadoRepository;
+        this.quizzRepository = quizzRepository;
         this.transactionTemplate = new TransactionTemplate(transactionManager);
         this.transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
     }
@@ -191,25 +197,36 @@ public class LogroService {
      * @param totalPreguntas cantidad de preguntas que tiene el quiz en la BD.
      * @param aciertos       respuestas correctas de esta tanda.
      * @param fallos         respuestas incorrectas de esta tanda.
+     * @param fallosPrevios  fallos ya registrados en tandas anteriores de la
+     *                       misma lección (el frontend responde de a una
+     *                       pregunta, por lo que los fallos se acumulan).
      *                       Medallas: 4, 5 y 9; también el inicio del curso.
      */
     public List<MedallaDTO> onQuizzRespondido(Integer idUsuario, Integer idLeccion,
-                                              int totalPreguntas, int aciertos, int fallos) {
+                                              int totalPreguntas, int aciertos, int fallos,
+                                              int fallosPrevios) {
         return enTransaccion(() -> {
             List<MedallaDTO> nuevas = new ArrayList<>();
             if (idUsuario == null || idLeccion == null) {
                 return nuevas;
             }
 
-            if (fallos > 0) {
+            int fallosAcumulados = fallosPrevios + fallos;
+
+            if (fallosAcumulados > 0) {
                 desbloquear(nuevas, idUsuario, LogroMedalla.FALLO_QUIZZ);
             }
 
-            if (totalPreguntas >= 2 && fallos >= totalPreguntas) {
+            // "Casi Casi, Pero No": se responde de a una pregunta, así que se
+            // cuentan los fallos acumulados de la lección, no solo los de esta tanda.
+            if (totalPreguntas >= 2 && fallosAcumulados >= 2) {
                 desbloquear(nuevas, idUsuario, LogroMedalla.FALLOS_QUIZZ_COMPLETO);
             }
 
-            if (totalPreguntas > 0 && fallos == 0 && aciertos >= totalPreguntas) {
+            // "Lectura de Mente": sin fallar en NINGUNA pregunta de la lección.
+            if (totalPreguntas > 0
+                    && fallosAcumulados == 0
+                    && aciertos >= totalPreguntas) {
                 desbloquear(nuevas, idUsuario, LogroMedalla.QUIZZ_PERFECTO);
             }
 
@@ -404,6 +421,31 @@ public class LogroService {
             List<IntentoLeccionEntity> intentos = intentoLeccionRepository.findByIdUsuario(idUsuario);
             if (intentos.stream().anyMatch(intento -> Boolean.FALSE.equals(intento.getEsCorrecto()))) {
                 desbloquear(nuevas, idUsuario, LogroMedalla.FALLO_QUIZZ);
+            }
+
+            // Medallas 5 y 9 deducidas de los intentos guardados por lección.
+            Map<Integer, List<IntentoLeccionEntity>> intentosPorLeccion = intentos.stream()
+                    .filter(intento -> intento.getIdLeccion() != null)
+                    .collect(Collectors.groupingBy(IntentoLeccionEntity::getIdLeccion));
+
+            for (Map.Entry<Integer, List<IntentoLeccionEntity>> entry : intentosPorLeccion.entrySet()) {
+                List<QuizzEntity> preguntas = quizzRepository.findByIdLeccion_IdLeccion(entry.getKey());
+                if (preguntas.isEmpty()) {
+                    continue;
+                }
+
+                List<IntentoLeccionEntity> intentosDeLeccion = entry.getValue();
+                long fallos = intentosDeLeccion.stream()
+                        .filter(intento -> Boolean.FALSE.equals(intento.getEsCorrecto()))
+                        .count();
+                long aciertos = intentosDeLeccion.size() - fallos;
+
+                if (fallos >= 2 && preguntas.size() >= 2) {
+                    desbloquear(nuevas, idUsuario, LogroMedalla.FALLOS_QUIZZ_COMPLETO);
+                }
+                if (fallos == 0 && aciertos >= preguntas.size()) {
+                    desbloquear(nuevas, idUsuario, LogroMedalla.QUIZZ_PERFECTO);
+                }
             }
 
             if (registroCompilacionRepository.contarCompilaciones(idUsuario) > 0) {

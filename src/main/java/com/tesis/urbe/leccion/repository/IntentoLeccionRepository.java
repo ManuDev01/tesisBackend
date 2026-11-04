@@ -3,6 +3,7 @@ package com.tesis.urbe.leccion.repository;
 import com.tesis.urbe.leccion.entity.IntentoLeccionEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -11,6 +12,16 @@ import java.util.List;
 public interface IntentoLeccionRepository extends JpaRepository<IntentoLeccionEntity, Integer> {
 
     List<IntentoLeccionEntity> findByIdUsuario(Integer idUsuario);
+
+    /**
+     * Cuenta los intentos fallidos que un usuario ya tiene registrados en una
+     * lección. Se usa para decidir las medallas 5 (fallar el quiz completo) y
+     * 9 (completarlo sin fallar) sin depender de que todas las respuestas
+     * lleguen en una sola petición.
+     */
+    @Query("SELECT COUNT(i) FROM IntentoLeccionEntity i "
+            + "WHERE i.idUsuario = :idUsuario AND i.idLeccion = :idLeccion AND i.esCorrecto = false")
+    long contarFallosDeLeccion(@Param("idUsuario") Integer idUsuario, @Param("idLeccion") Integer idLeccion);
 
     @Query(value = """
         SELECT 
