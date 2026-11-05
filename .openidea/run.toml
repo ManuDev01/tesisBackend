@@ -1,4 +1,12 @@
 [[configurations]]
+id = "gradle:build"
+name = "gradle build"
+kind = "gradle"
+command = "gradlew.bat"
+args = ["build"]
+env = { SPRING_DATASOURCE_URL = "jdbc:postgresql://[aws-1-us-west-2.pooler.supabase.com:6543/postgres?sslmode=require&prepareThreshold=0](https://aws-1-us-west-2.pooler.supabase.com:6543/postgres?sslmode=require&prepareThreshold=0)" }
+
+[[configurations]]
 id = "application:com.tesis.urbe.Application"
 name = "Application"
 kind = "spring-boot"
@@ -14,4 +22,4 @@ name = "gradle bootRun"
 kind = "gradle"
 command = "gradlew.bat"
 args = ["bootRun"]
-params = { arguments = "", executable = "gradlew.bat", projectDir = "", tasks = "bootRun", wrapper = "true" }
+params = { activeProfiles = "local", arguments = "", executable = "gradlew.bat", projectDir = "", tasks = "bootRun", wrapper = "true" }

@@ -151,7 +151,8 @@ public class QuizzService {
                 preguntas.size(),
                 aciertos,
                 fallos,
-                fallosPrevios
+                fallosPrevios,
+                request.sinFallos()
         );
 
         return new QuizzResultadoDTO(

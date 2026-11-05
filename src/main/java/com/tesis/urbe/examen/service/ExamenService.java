@@ -44,22 +44,26 @@ public class ExamenService {
     }
 
     public List<PreguntaExamenDTO> getPreguntasByExamen(Integer idExamen) {
-        return preguntaExamenRepository.findByIdExamen(idExamen)
-                .stream()
-                .map(q -> new PreguntaExamenDTO(
-                        q.getIdPreguntaExamen(),
-                        q.getIdExamen(),
-                        q.getTipo(),
-                        q.getEnunciado(),
-                        q.getOpcionA(),
-                        q.getOpcionB(),
-                        q.getOpcionC(),
-                        q.getRespuestaCorrecta(),
-                        q.getCodigoInicial(),
-                        q.getSalidaEsperada(),
-                        q.getPuntos()
-                ))
-                .collect(Collectors.toList());
+        // Si ya tienes el examen cargado o puedes buscarlo por su ID con el EntityGraph:
+        ExamenEntity examen = examenRepository.findById(idExamen)
+            .orElseThrow(() -> new RuntimeException("No se encontró el examen ID: " + idExamen));
+
+        return examen.getPreguntas()
+            .stream()
+            .map(q -> new PreguntaExamenDTO(
+                q.getIdPreguntaExamen(),
+                examen.getIdExamen(),
+                q.getTipo(),
+                q.getEnunciado(),
+                q.getOpcionA(),
+                q.getOpcionB(),
+                q.getOpcionC(),
+                q.getRespuestaCorrecta(),
+                q.getCodigoInicial(),
+                q.getSalidaEsperada(),
+                q.getPuntos()
+            ))
+            .collect(Collectors.toList());
     }
 
     public List<MedallaDTO> completarExamen(Integer idExamen, Integer idUsuario, boolean sinFallos) {

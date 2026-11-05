@@ -7,6 +7,8 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface PreguntaExamenRepository extends ListCrudRepository<PreguntaExamenEntity, Integer> {
-    List<PreguntaExamenEntity> findByIdExamen(Integer idExamen);
-}
+    public interface PreguntaExamenRepository extends ListCrudRepository<PreguntaExamenEntity, Integer> {
+
+        // Cambiado de findByIdExamen a findByExamen_IdExamen para que coincida con la relación
+        List<PreguntaExamenEntity> findByExamen_IdExamen(Integer idExamen);
+    }

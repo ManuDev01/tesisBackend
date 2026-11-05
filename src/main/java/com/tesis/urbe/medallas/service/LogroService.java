@@ -204,7 +204,7 @@ public class LogroService {
      */
     public List<MedallaDTO> onQuizzRespondido(Integer idUsuario, Integer idLeccion,
                                               int totalPreguntas, int aciertos, int fallos,
-                                              int fallosPrevios) {
+                                              int fallosPrevios, Boolean sinFallos) {
         return enTransaccion(() -> {
             List<MedallaDTO> nuevas = new ArrayList<>();
             if (idUsuario == null || idLeccion == null) {
@@ -213,19 +213,30 @@ public class LogroService {
 
             int fallosAcumulados = fallosPrevios + fallos;
 
+            // "F en el Chat" y "Casi Casi, Pero No" se otorgan en secuencia:
+            // el primer fallo desbloquea la primera; el siguiente fallo, la
+            // segunda. Así, aunque haya varios fallos acumulados (p. ej. una
+            // cuenta con historial), un solo fallo no desbloquea las dos a la vez.
+            boolean falloDesbloqueadoAhora = false;
             if (fallosAcumulados > 0) {
-                desbloquear(nuevas, idUsuario, LogroMedalla.FALLO_QUIZZ);
+                falloDesbloqueadoAhora = desbloquear(nuevas, idUsuario, LogroMedalla.FALLO_QUIZZ);
             }
 
             // "Casi Casi, Pero No": se responde de a una pregunta, así que se
             // cuentan los fallos acumulados de la lección, no solo los de esta tanda.
-            if (totalPreguntas >= 2 && fallosAcumulados >= 2) {
+            if (totalPreguntas >= 2 && fallosAcumulados >= 2 && !falloDesbloqueadoAhora) {
                 desbloquear(nuevas, idUsuario, LogroMedalla.FALLOS_QUIZZ_COMPLETO);
             }
 
-            // "Lectura de Mente": sin fallar en NINGUNA pregunta de la lección.
+            // "Lectura de Mente": completar el quiz sin fallar en el intento
+            // actual. El frontend envía `sinFallos` cuando la sesión no tuvo
+            // ningún fallo; sin el campo (clientes antiguos) se mantiene la
+            // comprobación histórica (cero fallos acumulados en la lección).
+            boolean intentoLimpio = sinFallos != null
+                    ? sinFallos
+                    : fallosAcumulados == 0;
             if (totalPreguntas > 0
-                    && fallosAcumulados == 0
+                    && intentoLimpio
                     && aciertos >= totalPreguntas) {
                 desbloquear(nuevas, idUsuario, LogroMedalla.QUIZZ_PERFECTO);
             }
@@ -363,7 +374,7 @@ public class LogroService {
             }
 
             for (CursoEntity curso : cursoRepository.findAll()) {
-                for (SeccionEntity seccion : seccionRepository.findByIdCursoOrderByOrdenAsc(curso.getIdCurso())) {
+                for (SeccionEntity seccion : seccionRepository.findByIdCursoOrderByOrdenAscWithRelations(curso.getIdCurso())) {
                     if (seccionCompletada(seccion.getIdSeccion(), lecciones, examenes)) {
                         desbloquear(nuevas, idUsuario, LogroMedalla.SECCION_COMPLETADA);
                         break;
@@ -419,9 +430,11 @@ public class LogroService {
             }
 
             List<IntentoLeccionEntity> intentos = intentoLeccionRepository.findByIdUsuario(idUsuario);
-            if (intentos.stream().anyMatch(intento -> Boolean.FALSE.equals(intento.getEsCorrecto()))) {
-                desbloquear(nuevas, idUsuario, LogroMedalla.FALLO_QUIZZ);
-            }
+            // En secuencia: si este recálculo acaba de dar "F en el Chat",
+            // "Casi Casi, Pero No" quedará para el siguiente recálculo/fallo.
+            boolean falloDesbloqueadoAhora = intentos.stream()
+                    .anyMatch(intento -> Boolean.FALSE.equals(intento.getEsCorrecto()))
+                    && desbloquear(nuevas, idUsuario, LogroMedalla.FALLO_QUIZZ);
 
             // Medallas 5 y 9 deducidas de los intentos guardados por lección.
             Map<Integer, List<IntentoLeccionEntity>> intentosPorLeccion = intentos.stream()
@@ -440,7 +453,7 @@ public class LogroService {
                         .count();
                 long aciertos = intentosDeLeccion.size() - fallos;
 
-                if (fallos >= 2 && preguntas.size() >= 2) {
+                if (fallos >= 2 && preguntas.size() >= 2 && !falloDesbloqueadoAhora) {
                     desbloquear(nuevas, idUsuario, LogroMedalla.FALLOS_QUIZZ_COMPLETO);
                 }
                 if (fallos == 0 && aciertos >= preguntas.size()) {
@@ -520,7 +533,7 @@ public class LogroService {
     private boolean cursoCompletado(Integer idCurso,
                                     Set<Integer> leccionesCompletadas,
                                     Set<Integer> examenesCompletados) {
-        List<SeccionEntity> secciones = seccionRepository.findByIdCursoOrderByOrdenAsc(idCurso);
+        List<SeccionEntity> secciones = seccionRepository.findByIdCursoOrderByOrdenAscWithRelations(idCurso);
         if (secciones.isEmpty()) {
             return false;
         }
@@ -534,7 +547,7 @@ public class LogroService {
                                            Set<Integer> examenesCompletados) {
         List<CursoEntity> cursosConContenido = cursoRepository.findAll()
                 .stream()
-                .filter(curso -> !seccionRepository.findByIdCursoOrderByOrdenAsc(curso.getIdCurso()).isEmpty())
+                .filter(curso -> !seccionRepository.findByIdCursoOrderByOrdenAscWithRelations(curso.getIdCurso()).isEmpty())
                 .toList();
 
         if (cursosConContenido.isEmpty()) {
@@ -548,7 +561,7 @@ public class LogroService {
     private boolean cursoIniciado(Integer idCurso,
                                   Set<Integer> leccionesCompletadas,
                                   Set<Integer> examenesCompletados) {
-        for (SeccionEntity seccion : seccionRepository.findByIdCursoOrderByOrdenAsc(idCurso)) {
+        for (SeccionEntity seccion : seccionRepository.findByIdCursoOrderByOrdenAscWithRelations(idCurso)) {
             boolean leccionHecha = leccionRepository.findByIdSeccion_IdSeccion(seccion.getIdSeccion())
                     .stream()
                     .anyMatch(leccion -> leccionesCompletadas.contains(leccion.getIdLeccion()));
@@ -645,16 +658,24 @@ public class LogroService {
         }
     }
 
-    private void desbloquear(List<MedallaDTO> nuevas, Integer idUsuario, LogroMedalla logro) {
+    /**
+     * Otorga la medalla y la agrega a {@code nuevas} si era nueva.
+     *
+     * @return {@code true} si la medalla se acaba de desbloquear en esta
+     *         llamada (la tenía permitido para secuenciar otorgamientos).
+     */
+    private boolean desbloquear(List<MedallaDTO> nuevas, Integer idUsuario, LogroMedalla logro) {
         if (idUsuario == null || logro == null) {
-            return;
+            return false;
         }
 
         MedallaDTO medalla = medallaService.desbloquear(idUsuario, logro);
         if (medalla != null) {
             nuevas.add(medalla);
             log.info("Usuario {} desbloqueó la medalla {} ({})", idUsuario, logro.name(), logro.getId());
+            return true;
         }
+        return false;
     }
 
     private Set<Integer> leccionesCompletadas(Integer idUsuario) {

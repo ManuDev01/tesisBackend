@@ -38,7 +38,7 @@ public class SeccionRoadmapService {
                 .map(rel -> rel.getIdLeccion())
                 .collect(Collectors.toSet());
 
-        List<SeccionEntity> secciones = seccionRepository.findByIdCursoOrderByOrdenAsc(idCurso);
+        List<SeccionEntity> secciones = seccionRepository.findByIdCursoOrderByOrdenAscWithRelations(idCurso);
         List<SeccionRoadmapDTO> roadmap = new ArrayList<>();
 
         for (SeccionEntity seccion : secciones) {
