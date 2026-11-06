@@ -44,9 +44,14 @@ public class ExamenService {
     }
 
     public List<PreguntaExamenDTO> getPreguntasByExamen(Integer idExamen) {
-        // Si ya tienes el examen cargado o puedes buscarlo por su ID con el EntityGraph:
-        ExamenEntity examen = examenRepository.findById(idExamen)
-            .orElseThrow(() -> new RuntimeException("No se encontró el examen ID: " + idExamen));
+        // Examen + preguntas en UNA sola consulta (EntityGraph). Si el examen no
+        // existe se devuelve la lista vacía en lugar de un error 500.
+        ExamenEntity examen = examenRepository.findByIdExamen(idExamen)
+            .orElse(null);
+
+        if (examen == null) {
+            return List.of();
+        }
 
         return examen.getPreguntas()
             .stream()

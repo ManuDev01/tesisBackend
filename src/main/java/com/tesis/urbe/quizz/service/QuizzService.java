@@ -66,6 +66,20 @@ public class QuizzService {
     }
 
     /**
+     * Devuelve los quizzes de varias lecciones en UNA sola consulta: el
+     * frontend los pide en lote para evitar una petición por lección (N+1).
+     */
+    public List<QuizzDTO> getQuizzByIdLecciones(List<Integer> idsLecciones) {
+        if (idsLecciones == null || idsLecciones.isEmpty()) {
+            return List.of();
+        }
+        return quizzRepository.findByIdLeccionInLeccionId(idsLecciones)
+                .stream()
+                .map(QuizzDTO::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Evalúa las respuestas del estudiante contra la respuesta correcta
      * guardada en la base de datos, registra cada intento y dispara las
      * medallas asociadas al quiz.

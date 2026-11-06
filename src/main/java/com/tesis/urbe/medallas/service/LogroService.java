@@ -374,7 +374,7 @@ public class LogroService {
             }
 
             for (CursoEntity curso : cursoRepository.findAll()) {
-                for (SeccionEntity seccion : seccionRepository.findByIdCursoOrderByOrdenAscWithRelations(curso.getIdCurso())) {
+                for (SeccionEntity seccion : seccionRepository.findByIdCursoOrderByOrdenAsc(curso.getIdCurso())) {
                     if (seccionCompletada(seccion.getIdSeccion(), lecciones, examenes)) {
                         desbloquear(nuevas, idUsuario, LogroMedalla.SECCION_COMPLETADA);
                         break;
@@ -533,7 +533,7 @@ public class LogroService {
     private boolean cursoCompletado(Integer idCurso,
                                     Set<Integer> leccionesCompletadas,
                                     Set<Integer> examenesCompletados) {
-        List<SeccionEntity> secciones = seccionRepository.findByIdCursoOrderByOrdenAscWithRelations(idCurso);
+        List<SeccionEntity> secciones = seccionRepository.findByIdCursoOrderByOrdenAsc(idCurso);
         if (secciones.isEmpty()) {
             return false;
         }
@@ -547,7 +547,7 @@ public class LogroService {
                                            Set<Integer> examenesCompletados) {
         List<CursoEntity> cursosConContenido = cursoRepository.findAll()
                 .stream()
-                .filter(curso -> !seccionRepository.findByIdCursoOrderByOrdenAscWithRelations(curso.getIdCurso()).isEmpty())
+                .filter(curso -> !seccionRepository.findByIdCursoOrderByOrdenAsc(curso.getIdCurso()).isEmpty())
                 .toList();
 
         if (cursosConContenido.isEmpty()) {
@@ -561,7 +561,7 @@ public class LogroService {
     private boolean cursoIniciado(Integer idCurso,
                                   Set<Integer> leccionesCompletadas,
                                   Set<Integer> examenesCompletados) {
-        for (SeccionEntity seccion : seccionRepository.findByIdCursoOrderByOrdenAscWithRelations(idCurso)) {
+        for (SeccionEntity seccion : seccionRepository.findByIdCursoOrderByOrdenAsc(idCurso)) {
             boolean leccionHecha = leccionRepository.findByIdSeccion_IdSeccion(seccion.getIdSeccion())
                     .stream()
                     .anyMatch(leccion -> leccionesCompletadas.contains(leccion.getIdLeccion()));

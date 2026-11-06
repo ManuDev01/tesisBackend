@@ -34,6 +34,16 @@ public class QuizzController {
     }
 
     /**
+     * Devuelve los quizzes de varias lecciones en una sola petición
+     * ({@code ?idsLecciones=1,2,3}): evita que el frontend haga una consulta por lección.
+     */
+    @GetMapping("/getQuizzByLecciones")
+    public ResponseEntity<List<QuizzDTO>> getQuizzByLecciones(
+            @RequestParam(required = false) List<Integer> idsLecciones) {
+        return ResponseEntity.ok(quizzService.getQuizzByIdLecciones(idsLecciones));
+    }
+
+    /**
      * Registra las respuestas de un quiz, las evalúa y devuelve, además del
      * resultado, las medallas que se desbloquearon con esta tanda.
      */

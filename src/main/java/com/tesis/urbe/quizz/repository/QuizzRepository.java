@@ -10,6 +10,7 @@ public interface QuizzRepository extends ListCrudRepository<QuizzEntity, Integer
 
     List<QuizzEntity> findByIdLeccion_IdLeccion(Integer idLeccion);
 
-    @Query("SELECT q FROM QuizzEntity q WHERE q.idLeccion.idLeccion IN :idsLecciones")
+    // Consulta en lote usada por GET /quizz/getQuizzByLecciones (antes sin usar).
+    @Query("SELECT q FROM QuizzEntity q WHERE q.idLeccion.idLeccion IN :idsLecciones ORDER BY q.idQuizz")
     List<QuizzEntity> findByIdLeccionInLeccionId(@Param("idsLecciones") List<Integer> idsLecciones);
 }

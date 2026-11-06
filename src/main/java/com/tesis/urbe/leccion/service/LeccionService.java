@@ -51,8 +51,9 @@ public class LeccionService {
                 .map(UsuarioEnLeccionEntity::getIdLeccion)
                 .collect(Collectors.toSet());
 
-        // 2. Traer TODAS las lecciones y mapear completada = true / false
-        return leccionRepository.findAll()
+        // 2. Traer TODAS las lecciones (con su sección ya cargada: sin el fetch,
+        // mapear el DTO disparaba 1 consulta perezosa por sección = N+1)
+        return leccionRepository.findAllConSeccion()
                 .stream()
                 .map(leccion -> {
                     boolean estaCompletada = leccionesCompletadasIds.contains(leccion.getIdLeccion());
