@@ -4,6 +4,8 @@ import java.util.List;
 
 import com.tesis.urbe.user.dto.DeleteUserDTO;
 import com.tesis.urbe.user.dto.UpdateUserDTO;
+import com.tesis.urbe.user.dto.UserExpDTO;
+import com.tesis.urbe.user.dto.UserExpLevelDTO;
 import com.tesis.urbe.user.dto.UserRankingDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -44,6 +46,21 @@ public class UserController {
   public ResponseEntity<Integer> obtainExp(@PathVariable Integer idUsuario) {
     Integer totalExp = userService.obtainExp(idUsuario);
     return ResponseEntity.ok(totalExp);
+  }
+
+  @GetMapping("/expByUser")
+  public ResponseEntity<List<UserExpDTO>> getExpByUser() {
+    // EXP de cada usuario (id, nombre y total) en UNA sola consulta, sin N+1
+    List<UserExpDTO> usuarios = userService.getExpDeTodosLosUsuarios();
+    return ResponseEntity.ok(usuarios);
+  }
+
+  @GetMapping("/expByLevel/{idUsuario}")
+  public ResponseEntity<List<UserExpLevelDTO>> getExpByLevel(@PathVariable Integer idUsuario) {
+    // EXP del usuario por nivel/curso (Básico, Intermedio, Avanzado),
+    // agrupada por seccion.idcurso en UNA sola consulta, sin N+1
+    List<UserExpLevelDTO> niveles = userService.getExpByLevel(idUsuario);
+    return ResponseEntity.ok(niveles);
   }
 
   @PostMapping("/saveUser")

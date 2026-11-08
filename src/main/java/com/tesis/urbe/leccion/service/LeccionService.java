@@ -1,12 +1,17 @@
 package com.tesis.urbe.leccion.service;
 
+import com.tesis.urbe.leccion.dto.IntentosPorLeccionDTO;
 import com.tesis.urbe.leccion.dto.LeccionDTO;
+import com.tesis.urbe.leccion.dto.RegistroIntentoLeccionDTO;
 import com.tesis.urbe.leccion.dto.UsuarioLeccionesCompletadasDTO;
+import com.tesis.urbe.leccion.entity.RegistroIntentoLeccionEntity;
 import com.tesis.urbe.leccion.entity.UsuarioEnLeccionEntity;
 import com.tesis.urbe.leccion.repository.LeccionRepository;
+import com.tesis.urbe.leccion.repository.RegistroIntentoLeccionRepository;
 import com.tesis.urbe.leccion.repository.UsuarioEnLeccionRepository;
 import com.tesis.urbe.medallas.dto.MedallaDTO;
 import com.tesis.urbe.medallas.service.LogroService;
+import com.tesis.urbe.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,13 +25,19 @@ public class LeccionService {
 
     private final LeccionRepository leccionRepository;
     private final UsuarioEnLeccionRepository usuarioEnLeccionRepository;
+    private final RegistroIntentoLeccionRepository registroIntentoLeccionRepository;
+    private final UserRepository userRepository;
     private final LogroService logroService;
 
     public LeccionService(LeccionRepository leccionRepository,
                           UsuarioEnLeccionRepository usuarioEnLeccionRepository,
+                          RegistroIntentoLeccionRepository registroIntentoLeccionRepository,
+                          UserRepository userRepository,
                           LogroService logroService) {
         this.leccionRepository = leccionRepository;
         this.usuarioEnLeccionRepository = usuarioEnLeccionRepository;
+        this.registroIntentoLeccionRepository = registroIntentoLeccionRepository;
+        this.userRepository = userRepository;
         this.logroService = logroService;
     }
 
@@ -73,6 +84,50 @@ public class LeccionService {
         // Se verifica siempre: así una segunda llamada (o un reintento del
         // frontend) también puede desbloquear medallas pendientes.
         return logroService.onLeccionCompletada(idUsuario, idLeccion);
+    }
+
+    /**
+     * Registra un intento de lección en la tabla {@code intento_leccion}
+     * (idUsuario + idLeccion). Cada llamada inserta una fila nueva: la tabla
+     * no tiene restricción de unicidad, así que se permiten varios intentos
+     * por usuario y lección.
+     */
+    public RegistroIntentoLeccionDTO registrarIntentoLeccion(Integer idLeccion, Integer idUsuario) {
+        // Validamos antes de insertar: las FK de intento_leccion (a usuarios y
+        // leccion) fallarían con un error opaco si los IDs no existen.
+        if (!leccionRepository.existsById(idLeccion)) {
+            throw new RuntimeException("Lección no encontrada con el ID: " + idLeccion);
+        }
+        if (!userRepository.existsById(idUsuario)) {
+            throw new RuntimeException("Usuario no encontrado con el ID: " + idUsuario);
+        }
+
+        RegistroIntentoLeccionEntity intento = registroIntentoLeccionRepository
+                .save(new RegistroIntentoLeccionEntity(idUsuario, idLeccion));
+
+        return new RegistroIntentoLeccionDTO(
+                intento.getIdIntentoLeccion(),
+                intento.getIdUsuario(),
+                intento.getIdLeccion()
+        );
+    }
+
+    /**
+     * Conteo total de intentos por lección (tabla {@code intento_leccion}):
+     * id de la lección, título y total de intentos. Solo lecciones con al
+     * menos un intento, de mayor a menor conteo.
+     */
+    @Transactional(readOnly = true)
+    public List<IntentosPorLeccionDTO> getIntentosPorLeccion() {
+        // UNA sola consulta agrupada (cero N+1): el conteo y el título vienen
+        // resueltos en la propia query.
+        return registroIntentoLeccionRepository.countIntentosPorLeccion().stream()
+                .map(fila -> new IntentosPorLeccionDTO(
+                        (Integer) fila[0],
+                        (String) fila[1],
+                        ((Number) fila[2]).longValue()
+                ))
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)

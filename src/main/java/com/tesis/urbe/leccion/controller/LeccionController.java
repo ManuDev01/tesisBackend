@@ -44,6 +44,19 @@ public class LeccionController {
         return ResponseEntity.ok(leccionService.completarLeccion(idLeccion, idUsuario));
     }
 
+    @PostMapping("/registrarIntentoLeccion/{idLeccion}/user/{idUsuario}")
+    public ResponseEntity<RegistroIntentoLeccionDTO> registrarIntentoLeccion(@PathVariable Integer idLeccion, @PathVariable Integer idUsuario) {
+        // Inserta el intento en la tabla intento_leccion (idUsuario + idLeccion)
+        return ResponseEntity.ok(leccionService.registrarIntentoLeccion(idLeccion, idUsuario));
+    }
+
+    @GetMapping("/intentos-por-leccion")
+    public ResponseEntity<List<IntentosPorLeccionDTO>> getIntentosPorLeccion() {
+        // Conteo total de intentos por lección desde intento_leccion
+        // (solo lecciones con intentos, de mayor a menor; UNA sola consulta)
+        return ResponseEntity.ok(leccionService.getIntentosPorLeccion());
+    }
+
     @GetMapping("/completadas-por-usuario")
     public ResponseEntity<List<UsuarioLeccionesCompletadasDTO>> getLeccionesCompletadasPorUsuario() {
         return ResponseEntity.ok(leccionService.getLeccionesCompletadasPorUsuario());

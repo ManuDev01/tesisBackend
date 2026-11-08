@@ -6,6 +6,8 @@ import java.util.stream.Collectors;
 import com.tesis.urbe.rol.entity.RolEntity;
 import com.tesis.urbe.user.dto.DeleteUserDTO;
 import com.tesis.urbe.user.dto.UpdateUserDTO;
+import com.tesis.urbe.user.dto.UserExpDTO;
+import com.tesis.urbe.user.dto.UserExpLevelDTO;
 import com.tesis.urbe.user.dto.UserRankingDTO;
 import com.tesis.urbe.user.entity.UserEntity;
 import org.hibernate.sql.Update;
@@ -104,11 +106,44 @@ public class UserService {
     }
 
     public Integer obtainExp(Integer idUsuario) {
-        // Experiencia total (lecciones + proyectos + medallas) calculada en UNA
+        // Experiencia total (las cinco tablas de progreso) calculada en UNA
         // sola consulta; antes eran 6 consultas sueltas por usuario.
         return userRepository.calcularExpDeUsuario(idUsuario)
                 .map(Long::intValue)
                 .orElse(0);
+    }
+
+    public List<UserExpDTO> getExpDeTodosLosUsuarios() {
+        // UNA sola consulta para todos los usuarios (cero N+1): la EXP viene
+        // calculada en la propia query con subconsultas sobre las cinco tablas
+        // de progreso (usuarioenleccion, usuarioenexamen, usuarioenproyectocurso,
+        // usuarioconproyecto y usuarioconmedalla). Ordena por EXP desc; los
+        // empates conservan el orden por idUsuario de la query (sort estable).
+        return userRepository.findExpDeTodosLosUsuarios().stream()
+                .map(fila -> new UserExpDTO(
+                        (Integer) fila[0],
+                        (String) fila[1],
+                        ((Number) fila[2]).intValue()
+                ))
+                .sorted((u1, u2) -> u2.totalExp().compareTo(u1.totalExp()))
+                .collect(Collectors.toList());
+    }
+
+    public List<UserExpLevelDTO> getExpByLevel(Integer idUsuario) {
+        // Misma validación que getUserById: sin usuario no devolvemos 0s engañosos
+        userRepository.findById(idUsuario)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con el ID: " + idUsuario));
+
+        // UNA sola consulta (cero N+1): EXP del usuario agrupada por curso/nivel
+        // (lecciones + exámenes + proyectos de curso, las únicas fuentes con
+        // curso vía seccion.idcurso). Los cursos sin progreso salen con 0.
+        return userRepository.findExpPorCursoDeUsuario(idUsuario).stream()
+                .map(fila -> new UserExpLevelDTO(
+                        (Integer) fila[0],
+                        (String) fila[1],
+                        ((Number) fila[2]).intValue()
+                ))
+                .collect(Collectors.toList());
     }
 
     public List<UserRankingDTO> getUsersOrderByExp() {
