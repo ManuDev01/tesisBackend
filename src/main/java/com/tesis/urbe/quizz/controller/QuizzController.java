@@ -65,8 +65,8 @@ public class QuizzController {
     }
 
     @GetMapping("/getQuizzConMasFallos")
-    public ResponseEntity<QuizzFalloDashboardDTO> getQuizzConMasFallos() {
-        QuizzFalloDashboardDTO quizzConMasFallos = quizzService.getQuizzConMasFallos();
+    public ResponseEntity<List<QuizzFalloDashboardDTO>> getQuizzConMasFallos() {
+        List<QuizzFalloDashboardDTO> quizzConMasFallos = quizzService.getQuizzConMasFallos();
         return ResponseEntity.ok(quizzConMasFallos);
     }
 }

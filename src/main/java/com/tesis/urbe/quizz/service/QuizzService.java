@@ -17,7 +17,6 @@ import com.tesis.urbe.quizz.repository.FalloUsuarioQuizzRepository;
 import com.tesis.urbe.quizz.repository.QuizzRepository;
 import com.tesis.urbe.user.entity.UserEntity;
 import com.tesis.urbe.user.repository.UserRepository;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -221,9 +220,12 @@ public class QuizzService {
                 .collect(Collectors.toList());
     }
 
-    // Obtener el quiz con más fallos para el dashboard
-    public QuizzFalloDashboardDTO getQuizzConMasFallos() {
-        List<QuizzFalloDashboardDTO> resultado = falloUsuarioQuizzRepository.findQuizzConMasFallos(PageRequest.of(0, 1));
-        return resultado.isEmpty() ? null : resultado.get(0);
+    /**
+     * Preguntas de quiz agrupadas por fallos, ordenadas de mayor a menor para
+     * el dashboard del admin. Se devuelven TODAS las filas (antes se limitaba
+     * a una sola con {@code PageRequest.of(0, 1)}).
+     */
+    public List<QuizzFalloDashboardDTO> getQuizzConMasFallos() {
+        return falloUsuarioQuizzRepository.findQuizzConMasFallos();
     }
 }

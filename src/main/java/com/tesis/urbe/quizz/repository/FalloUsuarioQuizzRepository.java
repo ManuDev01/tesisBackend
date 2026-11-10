@@ -2,7 +2,6 @@ package com.tesis.urbe.quizz.repository;
 
 import com.tesis.urbe.quizz.dto.QuizzFalloDashboardDTO;
 import com.tesis.urbe.quizz.entity.FalloUsuarioQuizzEntity;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.ListCrudRepository;
 
@@ -26,5 +25,5 @@ public interface FalloUsuarioQuizzRepository extends ListCrudRepository<FalloUsu
         GROUP BY q.idQuizz, q.pregunta, s.titulo
         ORDER BY COUNT(f) DESC
     """)
-    List<QuizzFalloDashboardDTO> findQuizzConMasFallos(Pageable pageable);
+    List<QuizzFalloDashboardDTO> findQuizzConMasFallos();
 }
